@@ -24,7 +24,7 @@ module.exports = configure(function (ctx) {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
     boot: [
-
+      'urql'
     ],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-css
@@ -72,7 +72,7 @@ module.exports = configure(function (ctx) {
 
       chainWebpack (chain) {
         chain.plugin('eslint-webpack-plugin')
-          .use(ESLintPlugin, [{ extensions: ['js', 'vue'] }])
+          .use(ESLintPlugin, [{ extensions: [ 'js', 'vue' ] }])
       }
 
     },
@@ -82,7 +82,7 @@ module.exports = configure(function (ctx) {
       server: {
         type: 'http'
       },
-      port: 8080,
+      port: 8090,
       open: true // opens browser window automatically
     },
 
@@ -101,7 +101,10 @@ module.exports = configure(function (ctx) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: [
+        'LocalStorage',
+        'Notify'
+      ]
     },
 
     // animations: 'all', // --- includes all animations

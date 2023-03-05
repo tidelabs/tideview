@@ -28,14 +28,14 @@ module.exports = {
     // 'plugin:vue/vue3-recommended', // Priority C: Recommended (Minimizing Arbitrary Choices and Cognitive Overhead)
 
     'standard'
-    
+
   ],
 
   plugins: [
     // https://eslint.vuejs.org/user-guide/#why-doesn-t-it-work-on-vue-files
     // required to lint *.vue files
     'vue',
-    
+
   ],
 
   globals: {
@@ -53,14 +53,30 @@ module.exports = {
 
   // add your custom rules here
   rules: {
-    
-    // allow async-await
+    'brace-style': [ 'error', 'stroustrup', { allowSingleLine: true } ],
+    'prefer-const': 'error',
+    'prefer-promise-reject-errors': 'off',
+    'multiline-ternary': 'off',
+    'no-prototype-builtins': 'off',
+    'no-case-declarations': 'off',
     'generator-star-spacing': 'off',
-    // allow paren-less arrow functions
     'arrow-parens': 'off',
+    'object-property-newline': 'off',
     'one-var': 'off',
     'no-void': 'off',
-    'multiline-ternary': 'off',
+    'no-lone-blocks': 'error',
+    'no-unused-expressions': [ 'error', { allowTernary: true, "allowShortCircuit": true } ],
+    'no-useless-concat': 'error',
+    'no-useless-return': 'error',
+    'no-unneeded-ternary': 'error',
+    'no-confusing-arrow': [ 'error', { allowParens: true } ],
+    'operator-linebreak': [ 'error', 'before' ],
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+
+    'array-bracket-spacing': [ 'error', 'always', { singleValue: false } ],
+    'object-curly-spacing': [ 'error', 'always' ],
+    'computed-property-spacing': [ 'error', 'always' ],
+    'template-curly-spacing': [ 'error', 'always' ],
 
     'import/first': 'off',
     'import/named': 'error',
@@ -70,10 +86,7 @@ module.exports = {
     'import/extensions': 'off',
     'import/no-unresolved': 'off',
     'import/no-extraneous-dependencies': 'off',
-    
-    'prefer-promise-reject-errors': 'off',
 
-    // allow debugger during development only
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
+    'vue/multi-word-component-names': 'off'
   }
 }
