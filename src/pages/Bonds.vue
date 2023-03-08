@@ -1,8 +1,8 @@
 <template>
   <q-page padding>
     <q-table
-      id="swaps-data"
-      title="Swaps"
+      id="bonds-data"
+      title="Bonds"
       :loading="loading"
       :columns="columns"
       :rows="data"
@@ -49,24 +49,12 @@
             </router-link> -->
           </q-td>
 
-          <q-td key="amountFrom" :props="props">
-            <span>{{ formatToken(props.row.assetFrom, props.row.amountFrom, 4) }}<q-tooltip>{{ formatToken(props.row.assetFrom, props.row.amountFrom) + ' ' + props.row.assetFrom }}</q-tooltip></span>
+          <q-td key="amount" :props="props">
+            <span>{{ formatToken('TDFY', props.row.amount, 4) }}<q-tooltip>{{ formatToken('TDFY', props.row.amount) + ' TDFY' }}</q-tooltip></span>
           </q-td>
 
-          <q-td key="assetFrom" :props="props">
-            {{  props.row.assetFrom }}
-          </q-td>
-
-          <q-td key="amountTo" :props="props">
-            <span>{{ formatToken(props.row.assetTo, props.row.amountTo, 4) }}<q-tooltip>{{ formatToken(props.row.assetTo, props.row.amountTo) + ' ' + props.row.assetTo }}</q-tooltip></span>
-          </q-td>
-
-          <q-td key="assetTo" :props="props">
-            {{  props.row.assetTo }}
-          </q-td>
-
-          <q-td key="status" :props="props">
-            {{  props.row.status }}
+          <q-td key="type" :props="props">
+            {{  props.row.type }}
           </q-td>
         </q-tr>
       </template>
@@ -79,7 +67,7 @@ import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
-import { useSwapsStore } from 'src/stores/swaps'
+import { useBondsStore } from 'src/stores/bonds'
 import { useAssetsStore } from 'src/stores/assets'
 import { useChainInfoStore } from 'src/stores/chainInfo'
 import { toBaseToken } from 'src/utils/tokens'
@@ -90,18 +78,18 @@ import { matCheckCircle, matCancel } from 'src/utils/icons'
 import Identicon from 'src/components/Identicon.vue'
 
 export default {
-  name: 'Swaps',
+  name: 'Bonds',
 
   components: {
     Identicon
   },
 
   setup () {
-    const swapsStore = useSwapsStore()
+    const bondsStore = useBondsStore()
     const assetsStore = useAssetsStore()
     const chainInfoStore = useChainInfoStore()
-    const currentPage = ref(swapsStore.pagination.page)
-    const pagination = ref(swapsStore.pagination)
+    const currentPage = ref(bondsStore.pagination.page)
+    const pagination = ref(bondsStore.pagination)
 
     const columns = [
       {
@@ -129,70 +117,38 @@ export default {
         sortable: false
       },
       {
-        label: 'Amount From',
-        name: 'amountFrom',
-        field: 'amountFrom',
+        label: 'Amount',
+        name: 'amount',
+        field: 'amount',
         required: true,
         align: 'right',
         sortable: false
       },
       {
-        label: 'Asset From',
-        name: 'assetFrom',
-        field: 'assetFrom',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Amount To',
-        name: 'amountTo',
-        field: 'amountTo',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Asset To',
-        name: 'assetTo',
-        field: 'assetTo',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Status',
-        name: 'status',
-        field: 'status',
+        label: 'Type',
+        name: 'type',
+        field: 'type',
         required: true,
         align: 'left',
         sortable: false
       }
     ]
 
-    function swapsQuery () {
+    function bondsQuery () {
       const result = useQuery({
         query: `
           query MyQuery($first: Int! = 10, $after: String) {
-            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit"}) {
+            bondsConnection(orderBy: blockNumber_DESC, first: $first, after: $after) {
               totalCount
               edges {
                 node {
                   account {
                     id
                   }
-                  amountFrom
-                  amountFromFilled
-                  assetFrom
-                  amountTo
-                  amountToFilled
-                  assetTo
+                  amount
                   blockNumber
                   extrinsicHash
                   id
-                  isMarketMaker
-                  slippage
-                  status
                   timestamp
                   type
                 }
@@ -206,58 +162,51 @@ export default {
       return result
     }
 
-    const variables = computed(() => swapsStore.variables)
+    const variables = computed(() => bondsStore.variables)
 
     const maxPages = computed(() => {
       let extra = 0
-      if (swapsStore.pagination.rowsPerPage === 0) return 1
-      if (swapsStore.pagination.rowsNumber % swapsStore.pagination.rowsPerPage) extra = 1
-      return swapsStore.pagination.rowsNumber / swapsStore.pagination.rowsPerPage + extra
+      if (bondsStore.pagination.rowsPerPage === 0) return 1
+      if (bondsStore.pagination.rowsNumber % bondsStore.pagination.rowsPerPage) extra = 1
+      return bondsStore.pagination.rowsNumber / bondsStore.pagination.rowsPerPage + extra
     })
 
-    const result = swapsQuery()
+    const result = bondsQuery()
 
     watch(result.data, (data) => {
       if (!data) return
 
       // total rows available
-      swapsStore.pagination.rowsNumber = data.swapsConnection.totalCount
+      bondsStore.pagination.rowsNumber = data.bondsConnection.totalCount
 
-      const mapped = data.swapsConnection.edges.map((d) => {
+      const mapped = data.bondsConnection.edges.map((d) => {
         return {
           accountId: d.node.account.id,
-          amountFrom: d.node.amountFromFilled || d.node.amountFrom,
-          assetFrom: d.node.assetFrom,
-          // fix for bug in subsquid
-          amountTo: d.node.amountToFilled !== d.node.amountFromFilled ? d.node.amountToFilled || d.node.amountTo : d.node.amountTo,
-          assetTo: d.node.assetTo,
-          slippage: d.node.slippage,
-          status: d.node.status,
+          amount: d.node.amount,
           type: d.node.type,
           blockNumber: d.node.blockNumber,
           // extrinsicHash: d.node.extrinsicHash,
           // proposalHash: d.node.proposalHash,
           timestamp: d.node.timestamp,
           // transactionId: d.node.transactionId,
-          // success: d.node.success,
           id: d.node.id
         }
       })
-      swapsStore.data.splice(0, swapsStore.data.length, ...mapped)
+      bondsStore.data.splice(0, bondsStore.data.length, ...mapped)
     })
 
     watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = swapsStore.pagination
+      const { rowsPerPage, rowsNumber } = bondsStore.pagination
 
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = swapsStore.pagination.page = page
+      pagination.value.page = bondsStore.pagination.page = page
       setVariables(first, after)
     })
 
     function setVariables (first = 10, after = null) {
-      swapsStore.variables.first = first
-      swapsStore.variables.after = after
+      bondsStore.variables.first = first
+      bondsStore.variables.after = after
     }
 
     function onRequest (props) {
@@ -268,7 +217,7 @@ export default {
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
 
-      pagination.value = swapsStore.pagination = extend(false, swapsStore.pagination, props.pagination)
+      pagination.value = bondsStore.pagination = extend(false, bondsStore.pagination, props.pagination)
 
       setVariables(first, after)
     }
@@ -297,7 +246,7 @@ export default {
       loading: result.fetching,
       error: result.error,
       columns,
-      data: swapsStore.data,
+      data: bondsStore.data,
       pagination,
       onRequest,
       maxPages,
@@ -306,10 +255,10 @@ export default {
       formatToken,
       formatDateTimeInternational,
       tidechainExplorerUrl,
-      bondingEntityUrl,
       rowsPerPageOptions,
       matCheckCircle,
-      matCancel
+      matCancel,
+      bondingEntityUrl
     }
   }
 }

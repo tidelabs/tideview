@@ -12,7 +12,7 @@
         /> -->
 
         <q-toolbar-title style="max-width: 100px;">
-          Tidescan
+          Tideview
         </q-toolbar-title>
 
         <q-separator dark vertical inset />
@@ -76,6 +76,9 @@
 <script>
 import { defineComponent, ref, getCurrentInstance, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useQuery } from '@urql/vue'
+import { useChainInfoStore } from 'src/stores/chainInfo'
+import { useAssetsStore } from 'src/stores/assets'
 // import EssentialLink from 'components/EssentialLink.vue'
 import InternalLink from 'components/InternalLink.vue'
 
@@ -83,18 +86,18 @@ const matBrightness2 = 'M0 0h24v24H0z@@fill:none;&&M10 2c-1.82 0-3.53.5-5 1.35C7
 const matBrightness5 = 'M0 0h24v24H0z@@fill:none;&&M20 15.31L23.31 12 20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z'
 
 const internalLinks = [
-  {
-    title: 'Blocks',
-    link: 'blocks'
-  },
-  {
-    title: 'Extrinsics',
-    link: 'extrinsics'
-  },
-  {
-    title: 'Events',
-    link: 'events'
-  },
+  // {
+  //   title: 'Blocks',
+  //   link: 'blocks'
+  // },
+  // {
+  //   title: 'Extrinsics',
+  //   link: 'extrinsics'
+  // },
+  // {
+  //   title: 'Events',
+  //   link: 'events'
+  // },
   {
     title: 'Swaps',
     link: 'swaps'
@@ -108,8 +111,28 @@ const internalLinks = [
     link: 'deposits'
   },
   {
+    title: 'Transfers',
+    link: 'transfers'
+  },
+  {
+    title: 'Bonds',
+    link: 'bonds'
+  },
+  {
+    title: 'Rewards',
+    link: 'rewards'
+  },
+  {
+    title: 'Slashes',
+    link: 'slashes'
+  },
+  {
     title: 'Accounts',
     link: 'accounts'
+  },
+  {
+    title: 'History',
+    link: 'history'
   }
 ]
 
@@ -167,6 +190,8 @@ export default defineComponent({
   },
 
   setup () {
+    const chainInfoStore = useChainInfoStore()
+    const assetsStore = useAssetsStore()
     const vm = getCurrentInstance()
     const $q = useQuasar() || vm.proxy.$q || vm.ctx.$q
 
@@ -177,12 +202,66 @@ export default defineComponent({
     // dark mode preferences
     theme.value = $q.localStorage.getItem('theme')
 
-    watch(() => $q.dark.isActive, val => {
+    watch(() => $q.dark.isActive, (val) => {
       theme.value = val ? 'dark' : 'light'
     })
 
     watch(theme, (val) => {
       $q.localStorage.set('theme', val)
+    })
+
+    function setTheme (theme) {
+      if (theme === null) {
+        $q.dark.set('auto')
+      }
+      else if (theme === 'dark') {
+        $q.dark.set(true)
+      }
+      else {
+        $q.dark.set(false)
+      }
+    }
+
+    setTheme(theme.value)
+
+    const chainInfo = useQuery({
+      query: `
+        query MyQuery {
+          chainInfo {
+            displayName
+            name
+            prefix
+            tokens {
+              decimals
+              symbol
+            }
+          }
+        }
+      `
+    })
+
+    watch(chainInfo.data, (data) => {
+      chainInfoStore.chainInfo = data.chainInfo
+      // console.log('ChainInfo:', chainInfoStore.chainInfo)
+    })
+
+    const assets = useQuery({
+      query: `
+        query MyQuery {
+          assets {
+            decimal
+            id
+            name
+            status
+            symbol
+          }
+        }
+      `
+    })
+
+    watch(assets.data, (data) => {
+      assetsStore.assets.splice(0, assetsStore.assets.length, ...data.assets)
+      // console.log('Assets:', assetsStore.assets)
     })
 
     return {

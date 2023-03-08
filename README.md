@@ -1,4 +1,4 @@
-# Quasar App (tidescan)
+# Quasar App (tideview)
 
 A Quasar Project
 

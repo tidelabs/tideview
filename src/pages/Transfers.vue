@@ -1,8 +1,8 @@
 <template>
   <q-page padding>
     <q-table
-      id="swaps-data"
-      title="Swaps"
+      id="transfers-data"
+      title="Transfers"
       :loading="loading"
       :columns="columns"
       :rows="data"
@@ -34,39 +34,47 @@
             {{  formatDateTimeInternational(props.row.timestamp) }}
           </q-td>
 
-          <q-td key="accountId" :props="props" >
-            <identicon :address="props.row.accountId" />
-            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
+          <q-td key="fromId" :props="props" >
+            <identicon :address="props.row.fromId" />
+            <a :href="bondingEntityUrl + props.row.fromId" target="_blank" class="external-link">
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
             </a>
             <!-- <router-link
-              :to="{ name: 'account', params: { address: props.row.accountId } }"
+              :to="{ name: 'account', params: { address: props.row.fromId } }"
               class="entity-link"
             >
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
             </router-link> -->
           </q-td>
 
-          <q-td key="amountFrom" :props="props">
-            <span>{{ formatToken(props.row.assetFrom, props.row.amountFrom, 4) }}<q-tooltip>{{ formatToken(props.row.assetFrom, props.row.amountFrom) + ' ' + props.row.assetFrom }}</q-tooltip></span>
+          <q-td key="toId" :props="props" >
+            <identicon :address="props.row.toId" />
+            <a :href="bondingEntityUrl + props.row.toId" target="_blank" class="external-link">
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
+            </a>
+            <!-- <router-link
+              :to="{ name: 'account', params: { address: props.row.toId } }"
+              class="entity-link"
+            >
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
+            </router-link> -->
           </q-td>
 
-          <q-td key="assetFrom" :props="props">
-            {{  props.row.assetFrom }}
+          <q-td key="amount" :props="props">
+            <span>{{ formatToken(props.row.asset, props.row.amount, 4) }}<q-tooltip>{{ formatToken(props.row.asset, props.row.amount) + ' ' + props.row.asset }}</q-tooltip></span>
           </q-td>
 
-          <q-td key="amountTo" :props="props">
-            <span>{{ formatToken(props.row.assetTo, props.row.amountTo, 4) }}<q-tooltip>{{ formatToken(props.row.assetTo, props.row.amountTo) + ' ' + props.row.assetTo }}</q-tooltip></span>
-          </q-td>
-
-          <q-td key="assetTo" :props="props">
-            {{  props.row.assetTo }}
+          <q-td key="asset" :props="props">
+            {{  props.row.asset }}
           </q-td>
 
           <q-td key="status" :props="props">
-            {{  props.row.status }}
+            <q-icon v-if="props.row.success" :name="matCheckCircle" size="20px" :color="$q.dark.isActive ? 'lime-13' : 'green-12'" />
+            <q-icon v-else :name="matCancel" size="20px" color="red-13" />
           </q-td>
         </q-tr>
       </template>
@@ -79,7 +87,7 @@ import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
-import { useSwapsStore } from 'src/stores/swaps'
+import { useTransfersStore } from 'src/stores/transfers'
 import { useAssetsStore } from 'src/stores/assets'
 import { useChainInfoStore } from 'src/stores/chainInfo'
 import { toBaseToken } from 'src/utils/tokens'
@@ -90,18 +98,18 @@ import { matCheckCircle, matCancel } from 'src/utils/icons'
 import Identicon from 'src/components/Identicon.vue'
 
 export default {
-  name: 'Swaps',
+  name: 'Transfers',
 
   components: {
     Identicon
   },
 
   setup () {
-    const swapsStore = useSwapsStore()
+    const transfersStore = useTransfersStore()
     const assetsStore = useAssetsStore()
     const chainInfoStore = useChainInfoStore()
-    const currentPage = ref(swapsStore.pagination.page)
-    const pagination = ref(swapsStore.pagination)
+    const currentPage = ref(transfersStore.pagination.page)
+    const pagination = ref(transfersStore.pagination)
 
     const columns = [
       {
@@ -121,79 +129,68 @@ export default {
         sortable: false
       },
       {
-        label: 'Account',
-        name: 'accountId',
-        field: 'accountId',
+        label: 'From Account',
+        name: 'fromId',
+        field: 'fromId',
         required: true,
         align: 'left',
         sortable: false
       },
       {
-        label: 'Amount From',
-        name: 'amountFrom',
-        field: 'amountFrom',
+        label: 'To Account',
+        name: 'toId',
+        field: 'toId',
+        required: true,
+        align: 'left',
+        sortable: false
+      },
+      {
+        label: 'Amount',
+        name: 'amount',
+        field: 'amount',
         required: true,
         align: 'right',
         sortable: false
       },
       {
-        label: 'Asset From',
-        name: 'assetFrom',
-        field: 'assetFrom',
+        label: 'Asset',
+        name: 'asset',
+        field: 'asset',
         required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Amount To',
-        name: 'amountTo',
-        field: 'amountTo',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Asset To',
-        name: 'assetTo',
-        field: 'assetTo',
-        required: true,
-        align: 'right',
+        align: 'left',
         sortable: false
       },
       {
         label: 'Status',
         name: 'status',
-        field: 'status',
+        field: 'success',
         required: true,
-        align: 'left',
+        align: 'center',
         sortable: false
       }
     ]
 
-    function swapsQuery () {
+    function transfersQuery () {
       const result = useQuery({
         query: `
           query MyQuery($first: Int! = 10, $after: String) {
-            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit"}) {
+            transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after) {
               totalCount
               edges {
                 node {
-                  account {
-                    id
-                  }
-                  amountFrom
-                  amountFromFilled
-                  assetFrom
-                  amountTo
-                  amountToFilled
-                  assetTo
+                  amount
+                  asset
                   blockNumber
                   extrinsicHash
+                  from {
+                    id
+                  }
                   id
-                  isMarketMaker
-                  slippage
-                  status
+                  success
                   timestamp
+                  to {
+                    id
+                  }
                   type
                 }
               }
@@ -206,58 +203,53 @@ export default {
       return result
     }
 
-    const variables = computed(() => swapsStore.variables)
+    const variables = computed(() => transfersStore.variables)
 
     const maxPages = computed(() => {
       let extra = 0
-      if (swapsStore.pagination.rowsPerPage === 0) return 1
-      if (swapsStore.pagination.rowsNumber % swapsStore.pagination.rowsPerPage) extra = 1
-      return swapsStore.pagination.rowsNumber / swapsStore.pagination.rowsPerPage + extra
+      if (transfersStore.pagination.rowsPerPage === 0) return 1
+      if (transfersStore.pagination.rowsNumber % transfersStore.pagination.rowsPerPage) extra = 1
+      return transfersStore.pagination.rowsNumber / transfersStore.pagination.rowsPerPage + extra
     })
 
-    const result = swapsQuery()
+    const result = transfersQuery()
 
     watch(result.data, (data) => {
       if (!data) return
 
       // total rows available
-      swapsStore.pagination.rowsNumber = data.swapsConnection.totalCount
+      transfersStore.pagination.rowsNumber = data.transfersConnection.totalCount
 
-      const mapped = data.swapsConnection.edges.map((d) => {
+      const mapped = data.transfersConnection.edges.map((d) => {
         return {
-          accountId: d.node.account.id,
-          amountFrom: d.node.amountFromFilled || d.node.amountFrom,
-          assetFrom: d.node.assetFrom,
-          // fix for bug in subsquid
-          amountTo: d.node.amountToFilled !== d.node.amountFromFilled ? d.node.amountToFilled || d.node.amountTo : d.node.amountTo,
-          assetTo: d.node.assetTo,
-          slippage: d.node.slippage,
-          status: d.node.status,
-          type: d.node.type,
+          fromId: d.node.from.id,
+          toId: d.node.to.id,
+          amount: d.node.amount,
+          asset: d.node.asset,
           blockNumber: d.node.blockNumber,
           // extrinsicHash: d.node.extrinsicHash,
           // proposalHash: d.node.proposalHash,
           timestamp: d.node.timestamp,
           // transactionId: d.node.transactionId,
-          // success: d.node.success,
+          success: d.node.success,
           id: d.node.id
         }
       })
-      swapsStore.data.splice(0, swapsStore.data.length, ...mapped)
+      transfersStore.data.splice(0, transfersStore.data.length, ...mapped)
     })
 
     watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = swapsStore.pagination
+      const { rowsPerPage, rowsNumber } = transfersStore.pagination
 
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = swapsStore.pagination.page = page
+      pagination.value.page = transfersStore.pagination.page = page
       setVariables(first, after)
     })
 
     function setVariables (first = 10, after = null) {
-      swapsStore.variables.first = first
-      swapsStore.variables.after = after
+      transfersStore.variables.first = first
+      transfersStore.variables.after = after
     }
 
     function onRequest (props) {
@@ -268,7 +260,7 @@ export default {
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
 
-      pagination.value = swapsStore.pagination = extend(false, swapsStore.pagination, props.pagination)
+      pagination.value = transfersStore.pagination = extend(false, transfersStore.pagination, props.pagination)
 
       setVariables(first, after)
     }
@@ -297,7 +289,7 @@ export default {
       loading: result.fetching,
       error: result.error,
       columns,
-      data: swapsStore.data,
+      data: transfersStore.data,
       pagination,
       onRequest,
       maxPages,
@@ -306,10 +298,10 @@ export default {
       formatToken,
       formatDateTimeInternational,
       tidechainExplorerUrl,
-      bondingEntityUrl,
       rowsPerPageOptions,
       matCheckCircle,
-      matCancel
+      matCancel,
+      bondingEntityUrl
     }
   }
 }

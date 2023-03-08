@@ -1,8 +1,8 @@
 {
-  "name": "tidescan",
+  "name": "tideview",
   "version": "0.0.1",
-  "description": "A Quasar Project",
-  "productName": "Quasar App",
+  "description": "View data on the TIDEFI blockchain",
+  "productName": "Tideview Dashboard",
   "author": "Jeff <jeff.galbraith@semantic-network.com>",
   "private": true,
   "scripts": {
@@ -10,25 +10,29 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
-    "@quasar/extras": "^1.0.0",
+    "@polkadot/api": "^10.0.1",
+    "@quasar/extras": "^1.15.11",
     "@urql/vue": "^1.0.4",
-    "core-js": "^3.6.5",
+    "bignumber.js": "^9.1.1",
+    "core-js": "^3.29.0",
+    "date-fns": "^2.29.3",
     "graphql": "^16.6.0",
-    "pinia": "^2.0.11",
-    "quasar": "^2.6.0",
-    "vue": "^3.0.0",
-    "vue-router": "^4.0.0"
+    "jdenticon": "^3.2.0",
+    "pinia": "^2.0.33",
+    "quasar": "^2.11.7",
+    "vue": "^3.2.47",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.13.14",
-    "@quasar/app-webpack": "^3.0.0",
-    "eslint": "^8.10.0",
+    "@babel/eslint-parser": "^7.19.1",
+    "@quasar/app-webpack": "^3.7.2",
+    "eslint": "^8.35.0",
     "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.19.1",
-    "eslint-plugin-n": "^15.0.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-vue": "^9.0.0",
-    "eslint-webpack-plugin": "^3.1.1"
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-vue": "^9.9.0",
+    "eslint-webpack-plugin": "^4.0.0"
   },
   "browserslist": [
     "last 10 Chrome versions",

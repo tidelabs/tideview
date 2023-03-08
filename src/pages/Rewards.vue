@@ -1,8 +1,8 @@
 <template>
   <q-page padding>
     <q-table
-      id="swaps-data"
-      title="Swaps"
+      id="rewards-data"
+      title="Rewards"
       :loading="loading"
       :columns="columns"
       :rows="data"
@@ -30,8 +30,12 @@
             </a>
           </q-td>
 
+          <q-td key="era" :props="props">
+            {{ props.row.era }}
+          </q-td>
+
           <q-td key="timestamp" :props="props">
-            {{  formatDateTimeInternational(props.row.timestamp) }}
+            {{ formatDateTimeInternational(props.row.timestamp) }}
           </q-td>
 
           <q-td key="accountId" :props="props" >
@@ -49,24 +53,23 @@
             </router-link> -->
           </q-td>
 
-          <q-td key="amountFrom" :props="props">
-            <span>{{ formatToken(props.row.assetFrom, props.row.amountFrom, 4) }}<q-tooltip>{{ formatToken(props.row.assetFrom, props.row.amountFrom) + ' ' + props.row.assetFrom }}</q-tooltip></span>
+          <q-td key="amount" :props="props">
+            <span>{{ formatToken('TDFY', props.row.amount, 4) }}<q-tooltip>{{ formatToken('TDFY', props.row.amount) + ' TDFY' }}</q-tooltip></span>
           </q-td>
 
-          <q-td key="assetFrom" :props="props">
-            {{  props.row.assetFrom }}
-          </q-td>
-
-          <q-td key="amountTo" :props="props">
-            <span>{{ formatToken(props.row.assetTo, props.row.amountTo, 4) }}<q-tooltip>{{ formatToken(props.row.assetTo, props.row.amountTo) + ' ' + props.row.assetTo }}</q-tooltip></span>
-          </q-td>
-
-          <q-td key="assetTo" :props="props">
-            {{  props.row.assetTo }}
-          </q-td>
-
-          <q-td key="status" :props="props">
-            {{  props.row.status }}
+          <q-td key="validatorId" :props="props" >
+            <identicon :address="props.row.validatorId" />
+            <a :href="bondingValidatorUrl + props.row.validatorId" target="_blank" class="external-link">
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
+            </a>
+            <!-- <router-link
+              :to="{ name: 'account', params: { address: props.row.validatorId } }"
+              class="entity-link"
+            >
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
+            </router-link> -->
           </q-td>
         </q-tr>
       </template>
@@ -79,35 +82,43 @@ import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
-import { useSwapsStore } from 'src/stores/swaps'
+import { useRewardsStore } from 'src/stores/rewards'
 import { useAssetsStore } from 'src/stores/assets'
 import { useChainInfoStore } from 'src/stores/chainInfo'
 import { toBaseToken } from 'src/utils/tokens'
 import { formatDateTimeInternational } from 'src/utils/time'
-import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
+import { tidechainExplorerUrl, bondingEntityUrl, bondingValidatorUrl, rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
 import Identicon from 'src/components/Identicon.vue'
 
 export default {
-  name: 'Swaps',
+  name: 'Rewards',
 
   components: {
     Identicon
   },
 
   setup () {
-    const swapsStore = useSwapsStore()
+    const rewardsStore = useRewardsStore()
     const assetsStore = useAssetsStore()
     const chainInfoStore = useChainInfoStore()
-    const currentPage = ref(swapsStore.pagination.page)
-    const pagination = ref(swapsStore.pagination)
+    const currentPage = ref(rewardsStore.pagination.page)
+    const pagination = ref(rewardsStore.pagination)
 
     const columns = [
       {
         label: 'Block',
         name: 'blockNumber',
         field: 'blockNumber',
+        required: true,
+        align: 'left',
+        sortable: false
+      },
+      {
+        label: 'Era',
+        name: 'era',
+        field: 'era',
         required: true,
         align: 'left',
         sortable: false
@@ -129,72 +140,41 @@ export default {
         sortable: false
       },
       {
-        label: 'Amount From',
-        name: 'amountFrom',
-        field: 'amountFrom',
+        label: 'Amount',
+        name: 'amount',
+        field: 'amount',
         required: true,
         align: 'right',
         sortable: false
       },
       {
-        label: 'Asset From',
-        name: 'assetFrom',
-        field: 'assetFrom',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Amount To',
-        name: 'amountTo',
-        field: 'amountTo',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Asset To',
-        name: 'assetTo',
-        field: 'assetTo',
-        required: true,
-        align: 'right',
-        sortable: false
-      },
-      {
-        label: 'Status',
-        name: 'status',
-        field: 'status',
+        label: 'Validator',
+        name: 'validatorId',
+        field: 'validatorId',
         required: true,
         align: 'left',
         sortable: false
       }
     ]
 
-    function swapsQuery () {
+    function bondsQuery () {
       const result = useQuery({
         query: `
           query MyQuery($first: Int! = 10, $after: String) {
-            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit"}) {
+            rewardsConnection(orderBy: blockNumber_DESC, first: $first, after: $after) {
               totalCount
               edges {
                 node {
                   account {
                     id
                   }
-                  amountFrom
-                  amountFromFilled
-                  assetFrom
-                  amountTo
-                  amountToFilled
-                  assetTo
+                  amount
                   blockNumber
+                  era
                   extrinsicHash
                   id
-                  isMarketMaker
-                  slippage
-                  status
                   timestamp
-                  type
+                  validatorId
                 }
               }
             }
@@ -206,58 +186,57 @@ export default {
       return result
     }
 
-    const variables = computed(() => swapsStore.variables)
+    const variables = computed(() => rewardsStore.variables)
 
     const maxPages = computed(() => {
       let extra = 0
-      if (swapsStore.pagination.rowsPerPage === 0) return 1
-      if (swapsStore.pagination.rowsNumber % swapsStore.pagination.rowsPerPage) extra = 1
-      return swapsStore.pagination.rowsNumber / swapsStore.pagination.rowsPerPage + extra
+      if (rewardsStore.pagination.rowsPerPage === 0) return 1
+      if (rewardsStore.pagination.rowsNumber % rewardsStore.pagination.rowsPerPage) extra = 1
+      return rewardsStore.pagination.rowsNumber / rewardsStore.pagination.rowsPerPage + extra
     })
 
-    const result = swapsQuery()
+    const result = bondsQuery()
+
+    watch(result.error, (error) => {
+      console.log(error)
+    })
 
     watch(result.data, (data) => {
       if (!data) return
 
       // total rows available
-      swapsStore.pagination.rowsNumber = data.swapsConnection.totalCount
-
-      const mapped = data.swapsConnection.edges.map((d) => {
+      rewardsStore.pagination.rowsNumber = data.rewardsConnection.totalCount
+      // console.log(data.rewardsConnection.edges)
+      const mapped = data.rewardsConnection.edges.map((d) => {
         return {
           accountId: d.node.account.id,
-          amountFrom: d.node.amountFromFilled || d.node.amountFrom,
-          assetFrom: d.node.assetFrom,
-          // fix for bug in subsquid
-          amountTo: d.node.amountToFilled !== d.node.amountFromFilled ? d.node.amountToFilled || d.node.amountTo : d.node.amountTo,
-          assetTo: d.node.assetTo,
-          slippage: d.node.slippage,
-          status: d.node.status,
-          type: d.node.type,
+          amount: d.node.amount,
+          validatorId: d.node.validatorId,
           blockNumber: d.node.blockNumber,
+          era: d.node.era,
           // extrinsicHash: d.node.extrinsicHash,
           // proposalHash: d.node.proposalHash,
           timestamp: d.node.timestamp,
           // transactionId: d.node.transactionId,
-          // success: d.node.success,
           id: d.node.id
         }
       })
-      swapsStore.data.splice(0, swapsStore.data.length, ...mapped)
+      rewardsStore.data.splice(0, rewardsStore.data.length, ...mapped)
+      console.log(rewardsStore.data)
     })
 
     watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = swapsStore.pagination
+      const { rowsPerPage, rowsNumber } = rewardsStore.pagination
 
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = swapsStore.pagination.page = page
+      pagination.value.page = rewardsStore.pagination.page = page
       setVariables(first, after)
     })
 
     function setVariables (first = 10, after = null) {
-      swapsStore.variables.first = first
-      swapsStore.variables.after = after
+      rewardsStore.variables.first = first
+      rewardsStore.variables.after = after
     }
 
     function onRequest (props) {
@@ -268,7 +247,7 @@ export default {
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
 
-      pagination.value = swapsStore.pagination = extend(false, swapsStore.pagination, props.pagination)
+      pagination.value = rewardsStore.pagination = extend(false, rewardsStore.pagination, props.pagination)
 
       setVariables(first, after)
     }
@@ -297,7 +276,7 @@ export default {
       loading: result.fetching,
       error: result.error,
       columns,
-      data: swapsStore.data,
+      data: rewardsStore.data,
       pagination,
       onRequest,
       maxPages,
@@ -306,10 +285,11 @@ export default {
       formatToken,
       formatDateTimeInternational,
       tidechainExplorerUrl,
-      bondingEntityUrl,
       rowsPerPageOptions,
       matCheckCircle,
-      matCancel
+      matCancel,
+      bondingEntityUrl,
+      bondingValidatorUrl
     }
   }
 }

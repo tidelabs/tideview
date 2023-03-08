@@ -1,1 +1,23 @@
 // app global css in SCSS form
+.entity-link {
+  text-decoration: underline dotted;
+  color: inherit;
+}
+
+.external-link {
+  text-decoration: underline dotted;
+  color: inherit;
+}
+
+.external-link::after {
+  font-family: 'Material Icons';
+  content: " launch";
+  font-feature-settings: 'liga';
+}
+
+.q-dark div,
+.body--dark div {
+  .q-item.q-router-link--active, .q-item--active {
+    color: #FFFF00;
+  }
+}
