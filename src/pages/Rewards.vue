@@ -83,9 +83,7 @@ import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
 import { useRewardsStore } from 'src/stores/rewards'
-import { useAssetsStore } from 'src/stores/assets'
-import { useChainInfoStore } from 'src/stores/chainInfo'
-import { toBaseToken } from 'src/utils/tokens'
+import { formatToken } from 'src/utils/tokens'
 import { formatDateTimeInternational } from 'src/utils/time'
 import { tidechainExplorerUrl, bondingEntityUrl, bondingValidatorUrl, rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
@@ -101,8 +99,6 @@ export default {
 
   setup () {
     const rewardsStore = useRewardsStore()
-    const assetsStore = useAssetsStore()
-    const chainInfoStore = useChainInfoStore()
     const currentPage = ref(rewardsStore.pagination.page)
     const pagination = ref(rewardsStore.pagination)
 
@@ -250,26 +246,6 @@ export default {
       pagination.value = rewardsStore.pagination = extend(false, rewardsStore.pagination, props.pagination)
 
       setVariables(first, after)
-    }
-
-    function formatToken (symbol, amount, precision) {
-      if (symbol === 'TDFY') {
-        // handle TDFY
-        const token = chainInfoStore.chainInfo.tokens.find((token) => token.symbol === symbol)
-        if (token) {
-          const decimals = parseInt(token.decimals, 10)
-          return toBaseToken(amount, decimals, precision || decimals)
-        }
-      }
-      else {
-        // handle all other assets
-        const token = assetsStore.assets.find((token) => token.symbol === symbol)
-        if (token) {
-          const decimals = parseInt(token.decimal, 10)
-          return toBaseToken(amount, decimals, precision || decimals)
-        }
-      }
-      return ''
     }
 
     return {

@@ -64,8 +64,7 @@ import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
 import { useWithdrawalsStore } from 'src/stores/withdrawals'
-import { useAssetsStore } from 'src/stores/assets'
-import { toBaseToken } from 'src/utils/tokens'
+import { formatToken } from 'src/utils/tokens'
 import { formatDateTimeInternational } from 'src/utils/time'
 import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
 
@@ -80,7 +79,6 @@ export default {
 
   setup () {
     const withdrawalsStore = useWithdrawalsStore()
-    const assetsStore = useAssetsStore()
     const currentPage = ref(withdrawalsStore.pagination.page)
     const pagination = ref(withdrawalsStore.pagination)
 
@@ -215,14 +213,6 @@ export default {
       pagination.value = withdrawalsStore.pagination = extend(false, withdrawalsStore.pagination, props.pagination)
 
       setVariables(first, after)
-    }
-
-    function formatToken (symbol, amount, precision) {
-      const token = assetsStore.assets.find((token) => token.symbol === symbol)
-      if (token) {
-        return toBaseToken(amount, token.decimal, precision || token.decimal)
-      }
-      return ''
     }
 
     return {
