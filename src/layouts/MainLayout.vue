@@ -12,7 +12,12 @@
         /> -->
 
         <q-toolbar-title style="max-width: 100px;">
-          Tideview
+          <router-link
+              :to="{ name: 'home' }"
+              class="home-link"
+            >
+            Tideview
+          </router-link>
         </q-toolbar-title>
 
         <q-separator dark vertical inset />
@@ -79,7 +84,6 @@ import { useQuasar } from 'quasar'
 import { useQuery } from '@urql/vue'
 import { useChainInfoStore } from 'src/stores/chainInfo'
 import { useAssetsStore } from 'src/stores/assets'
-// import EssentialLink from 'components/EssentialLink.vue'
 import InternalLink from 'components/InternalLink.vue'
 
 const matBrightness2 = 'M0 0h24v24H0z@@fill:none;&&M10 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5 8.65C6.47 21.5 8.18 22 10 22c5.52 0 10-4.48 10-10S15.52 2 10 2z'
@@ -131,61 +135,19 @@ const internalLinks = [
     link: 'accounts'
   },
   {
+    title: 'Active Bonds',
+    link: 'active-bonds'
+  },
+  {
     title: 'History',
     link: 'history'
   }
 ]
 
-// const linksList = [
-//   {
-//     title: 'Docs',
-//     caption: 'quasar.dev',
-//     icon: 'school',
-//     link: 'https://quasar.dev'
-//   },
-//   {
-//     title: 'Github',
-//     caption: 'github.com/quasarframework',
-//     icon: 'code',
-//     link: 'https://github.com/quasarframework'
-//   },
-//   {
-//     title: 'Discord Chat Channel',
-//     caption: 'chat.quasar.dev',
-//     icon: 'chat',
-//     link: 'https://chat.quasar.dev'
-//   },
-//   {
-//     title: 'Forum',
-//     caption: 'forum.quasar.dev',
-//     icon: 'record_voice_over',
-//     link: 'https://forum.quasar.dev'
-//   },
-//   {
-//     title: 'Twitter',
-//     caption: '@quasarframework',
-//     icon: 'rss_feed',
-//     link: 'https://twitter.quasar.dev'
-//   },
-//   {
-//     title: 'Facebook',
-//     caption: '@QuasarFramework',
-//     icon: 'public',
-//     link: 'https://facebook.quasar.dev'
-//   },
-//   {
-//     title: 'Quasar Awesome',
-//     caption: 'Community Quasar projects',
-//     icon: 'favorite',
-//     link: 'https://awesome.quasar.dev'
-//   }
-// ]
-
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    // EssentialLink,
     InternalLink
   },
 
@@ -277,3 +239,10 @@ export default defineComponent({
   }
 })
 </script>
+
+<style lang="scss">
+.home-link {
+  text-decoration: none;
+  color: inherit;
+}
+</style>
