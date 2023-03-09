@@ -27,7 +27,8 @@ const routes = [
       { name: 'slash', path: 'slash/:slash?', component: () => import('pages/Slash.vue') },
       { name: 'accounts', path: 'accounts', component: () => import('pages/Accounts.vue') },
       { name: 'account', path: 'account/:address?', component: () => import('pages/Account.vue') },
-      { name: 'history', path: 'history/:address?', component: () => import('pages/History.vue') }
+      { name: 'history', path: 'history/:address?', component: () => import('pages/History.vue') },
+      { name: 'active-bonds', path: 'active-bonds', component: () => import('pages/ActiveBonds.vue') }
     ]
   },
 
