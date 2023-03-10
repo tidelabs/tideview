@@ -14,7 +14,7 @@
   "dependencies": {
     "@polkadot/api": "^10.0.1",
     "@quasar/extras": "^1.15.11",
-    "@urql/vue": "^1.0.4",
+    "@urql/vue": "^1.0.5",
     "bignumber.js": "^9.1.1",
     "core-js": "^3.29.0",
     "date-fns": "^2.29.3",
