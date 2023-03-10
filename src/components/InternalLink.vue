@@ -2,7 +2,7 @@
   <q-item
     clickable
     v-close-popup
-    :to="link"
+    :to="{ name: link }"
   >
     <q-item-section
       v-if="icon"
