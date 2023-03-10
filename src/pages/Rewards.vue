@@ -40,17 +40,17 @@
 
           <q-td key="accountId" :props="props" >
             <identicon :address="props.row.accountId" />
-            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
+            <!-- <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </a>
-            <!-- <router-link
-              :to="{ name: 'account', params: { address: props.row.accountId } }"
+            </a> -->
+            <router-link
+              :to="{ name: 'history', params: { address: props.row.accountId } }"
               class="entity-link"
             >
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </router-link> -->
+            </router-link>
           </q-td>
 
           <q-td key="amount" :props="props">
@@ -59,17 +59,17 @@
 
           <q-td key="validatorId" :props="props" >
             <identicon :address="props.row.validatorId" />
-            <a :href="bondingValidatorUrl + props.row.validatorId" target="_blank" class="external-link">
+            <!-- <a :href="bondingValidatorUrl + props.row.validatorId" target="_blank" class="external-link">
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
-            </a>
-            <!-- <router-link
-              :to="{ name: 'account', params: { address: props.row.validatorId } }"
+            </a> -->
+            <router-link
+              :to="{ name: 'history', params: { address: props.row.validatorId } }"
               class="entity-link"
             >
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
-            </router-link> -->
+            </router-link>
           </q-td>
         </q-tr>
       </template>
@@ -218,7 +218,6 @@ export default {
         }
       })
       rewardsStore.data.splice(0, rewardsStore.data.length, ...mapped)
-      console.log(rewardsStore.data)
     })
 
     watch(currentPage, (page) => {

@@ -1,7 +1,7 @@
 <template>
-  <q-page padding>
+  <div>
     <q-table
-      id="transfers-data"
+      id="transfer-data"
       title="Transfers"
       :loading="loading"
       :columns="columns"
@@ -35,33 +35,39 @@
           </q-td>
 
           <q-td key="fromId" :props="props" >
-            <identicon :address="props.row.fromId" />
-            <!-- <a :href="bondingEntityUrl + props.row.fromId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
-            </a> -->
-            <router-link
-              :to="{ name: 'history', params: { account: props.row.fromId } }"
-              class="entity-link"
-            >
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
-            </router-link>
+            <div v-if="props.row.fromId === selectedAddress"><q-badge>This Account</q-badge></div>
+            <div v-else>
+              <identicon :address="props.row.fromId" />
+              <!-- <a :href="bondingEntityUrl + props.row.fromId" target="_blank" class="external-link">
+                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+                <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
+              </a> -->
+              <router-link
+                :to="{ name: 'history', params: { address: props.row.fromId } }"
+                class="entity-link"
+              >
+                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+                <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
+              </router-link>
+            </div>
           </q-td>
 
           <q-td key="toId" :props="props" >
-            <identicon :address="props.row.toId" />
-            <!-- <a :href="bondingEntityUrl + props.row.toId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
-            </a> -->
-            <router-link
-              :to="{ name: 'history', params: { address: props.row.toId } }"
-              class="entity-link"
-            >
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
-            </router-link>
+            <div v-if="props.row.toId === selectedAddress"><q-badge>This Account</q-badge></div>
+            <div v-else>
+              <identicon :address="props.row.toId" />
+              <!-- <a :href="bondingEntityUrl + props.row.toId" target="_blank" class="external-link">
+                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+                <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
+              </a> -->
+              <router-link
+                :to="{ name: 'history', params: { address: props.row.toId } }"
+                class="entity-link"
+              >
+                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+                <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
+              </router-link>
+            </div>
           </q-td>
 
           <q-td key="amount" :props="props">
@@ -79,7 +85,7 @@
         </q-tr>
       </template>
     </q-table>
-  </q-page>
+  </div>
 </template>
 
 <script>
@@ -87,7 +93,7 @@ import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
-import { useTransfersStore } from 'src/stores/transfers'
+import { useTransferStore } from 'src/stores/transfer'
 import { formatToken } from 'src/utils/tokens'
 import { formatDateTimeInternational } from 'src/utils/time'
 import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
@@ -96,16 +102,23 @@ import { matCheckCircle, matCancel } from 'src/utils/icons'
 import Identicon from 'src/components/Identicon.vue'
 
 export default {
-  name: 'Transfers',
+  name: 'Transfer',
 
   components: {
     Identicon
   },
 
-  setup () {
-    const transfersStore = useTransfersStore()
-    const currentPage = ref(transfersStore.pagination.page)
-    const pagination = ref(transfersStore.pagination)
+  props: {
+    account: String
+  },
+
+  setup (props) {
+    const transferStore = useTransferStore()
+    const currentPage = ref(transferStore.pagination.page)
+    const pagination = ref(transferStore.pagination)
+    const selectedAddress = ref(props.account)
+
+    transferStore.variables.id_eq = selectedAddress.value
 
     const columns = [
       {
@@ -169,24 +182,23 @@ export default {
     function transfersQuery () {
       const result = useQuery({
         query: `
-          query MyQuery($first: Int! = 10, $after: String) {
-            transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after) {
-              totalCount
+          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+            transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {from: {id_eq: $id_eq}, OR: {to: {id_eq: $id_eq}}}) {
               edges {
                 node {
+                  from {
+                    id
+                  }
+                  to {
+                    id
+                  }
                   amount
                   asset
                   blockNumber
                   extrinsicHash
-                  from {
-                    id
-                  }
                   id
                   success
                   timestamp
-                  to {
-                    id
-                  }
                   type
                 }
               }
@@ -199,13 +211,21 @@ export default {
       return result
     }
 
-    const variables = computed(() => transfersStore.variables)
+    const variables = computed(() => transferStore.variables)
 
     const maxPages = computed(() => {
       let extra = 0
-      if (transfersStore.pagination.rowsPerPage === 0) return 1
-      if (transfersStore.pagination.rowsNumber % transfersStore.pagination.rowsPerPage) extra = 1
-      return transfersStore.pagination.rowsNumber / transfersStore.pagination.rowsPerPage + extra
+      if (transferStore.pagination.rowsPerPage === 0) return 1
+      if (transferStore.pagination.rowsNumber % transferStore.pagination.rowsPerPage) extra = 1
+      return transferStore.pagination.rowsNumber / transferStore.pagination.rowsPerPage + extra
+    })
+
+    watch(() => props.account, () => {
+      selectedAddress.value = props.account
+    })
+
+    watch(selectedAddress, () => {
+      transferStore.variables.id_eq = selectedAddress.value
     })
 
     const result = transfersQuery()
@@ -214,7 +234,7 @@ export default {
       if (!data) return
 
       // total rows available
-      transfersStore.pagination.rowsNumber = data.transfersConnection.totalCount
+      transferStore.pagination.rowsNumber = data.transfersConnection.totalCount
 
       const mapped = data.transfersConnection.edges.map((d) => {
         return {
@@ -231,21 +251,21 @@ export default {
           id: d.node.id
         }
       })
-      transfersStore.data.splice(0, transfersStore.data.length, ...mapped)
+      transferStore.data.splice(0, transferStore.data.length, ...mapped)
     })
 
     watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = transfersStore.pagination
+      const { rowsPerPage, rowsNumber } = transferStore.pagination
 
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = transfersStore.pagination.page = page
+      pagination.value.page = transferStore.pagination.page = page
       setVariables(first, after)
     })
 
     function setVariables (first = 10, after = null) {
-      transfersStore.variables.first = first
-      transfersStore.variables.after = after
+      transferStore.variables.first = first
+      transferStore.variables.after = after
     }
 
     function onRequest (props) {
@@ -256,7 +276,7 @@ export default {
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
 
-      pagination.value = transfersStore.pagination = extend(false, transfersStore.pagination, props.pagination)
+      pagination.value = transferStore.pagination = extend(false, transferStore.pagination, props.pagination)
 
       setVariables(first, after)
     }
@@ -265,7 +285,7 @@ export default {
       loading: result.fetching,
       error: result.error,
       columns,
-      data: transfersStore.data,
+      data: transferStore.data,
       pagination,
       onRequest,
       maxPages,
@@ -277,7 +297,8 @@ export default {
       rowsPerPageOptions,
       matCheckCircle,
       matCancel,
-      bondingEntityUrl
+      bondingEntityUrl,
+      selectedAddress
     }
   }
 }

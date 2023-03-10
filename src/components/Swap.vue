@@ -1,7 +1,7 @@
 <template>
-  <q-page padding>
+  <div>
     <q-table
-      id="swaps-data"
+      id="swap-data"
       title="Swaps"
       :loading="loading"
       :columns="columns"
@@ -34,20 +34,13 @@
             {{  formatDateTimeInternational(props.row.timestamp) }}
           </q-td>
 
-          <q-td key="accountId" :props="props" >
+          <!-- <q-td key="accountId" :props="props" >
             <identicon :address="props.row.accountId" />
-            <!-- <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.accountId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </a> -->
-            <router-link
-              :to="{ name: 'history', params: { address: props.row.accountId } }"
-              class="entity-link"
-            >
+            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </router-link>
-          </q-td>
+            </a>
+          </q-td> -->
 
           <q-td key="amountFrom" :props="props">
             <span>{{ formatToken(props.row.assetFrom, props.row.amountFrom, 4) }}<q-tooltip>{{ formatToken(props.row.assetFrom, props.row.amountFrom) + ' ' + props.row.assetFrom }}</q-tooltip></span>
@@ -71,7 +64,7 @@
         </q-tr>
       </template>
     </q-table>
-  </q-page>
+  </div>
 </template>
 
 <script>
@@ -79,25 +72,32 @@ import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
-import { useSwapsStore } from 'src/stores/swaps'
+import { useSwapStore } from 'src/stores/swap'
 import { formatToken } from 'src/utils/tokens'
 import { formatDateTimeInternational } from 'src/utils/time'
 import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
-import Identicon from 'src/components/Identicon.vue'
+// import Identicon from 'src/components/Identicon.vue'
 
 export default {
   name: 'Swaps',
 
-  components: {
-    Identicon
+  // components: {
+  //   Identicon
+  // },
+
+  props: {
+    account: String
   },
 
-  setup () {
-    const swapsStore = useSwapsStore()
-    const currentPage = ref(swapsStore.pagination.page)
-    const pagination = ref(swapsStore.pagination)
+  setup (props) {
+    const swapStore = useSwapStore()
+    const currentPage = ref(swapStore.pagination.page)
+    const pagination = ref(swapStore.pagination)
+    const selectedAddress = ref(props.account)
+
+    swapStore.variables.id_eq = selectedAddress.value
 
     const columns = [
       {
@@ -116,14 +116,14 @@ export default {
         align: 'left',
         sortable: false
       },
-      {
-        label: 'Account',
-        name: 'accountId',
-        field: 'accountId',
-        required: true,
-        align: 'left',
-        sortable: false
-      },
+      // {
+      //   label: 'Account',
+      //   name: 'accountId',
+      //   field: 'accountId',
+      //   required: true,
+      //   align: 'left',
+      //   sortable: false
+      // },
       {
         label: 'Amount From',
         name: 'amountFrom',
@@ -169,14 +169,11 @@ export default {
     function swapsQuery () {
       const result = useQuery({
         query: `
-          query MyQuery($first: Int! = 10, $after: String) {
-            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit"}) {
+          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit", account: {id_eq: $id_eq}}) {
               totalCount
               edges {
                 node {
-                  account {
-                    id
-                  }
                   amountFrom
                   amountFromFilled
                   assetFrom
@@ -202,13 +199,21 @@ export default {
       return result
     }
 
-    const variables = computed(() => swapsStore.variables)
+    const variables = computed(() => swapStore.variables)
 
     const maxPages = computed(() => {
       let extra = 0
-      if (swapsStore.pagination.rowsPerPage === 0) return 1
-      if (swapsStore.pagination.rowsNumber % swapsStore.pagination.rowsPerPage) extra = 1
-      return swapsStore.pagination.rowsNumber / swapsStore.pagination.rowsPerPage + extra
+      if (swapStore.pagination.rowsPerPage === 0) return 1
+      if (swapStore.pagination.rowsNumber % swapStore.pagination.rowsPerPage) extra = 1
+      return swapStore.pagination.rowsNumber / swapStore.pagination.rowsPerPage + extra
+    })
+
+    watch(() => props.account, () => {
+      selectedAddress.value = props.account
+    })
+
+    watch(selectedAddress, () => {
+      swapStore.variables.id_eq = selectedAddress.value
     })
 
     const result = swapsQuery()
@@ -217,11 +222,11 @@ export default {
       if (!data) return
 
       // total rows available
-      swapsStore.pagination.rowsNumber = data.swapsConnection.totalCount
+      swapStore.pagination.rowsNumber = data.swapsConnection.totalCount
 
       const mapped = data.swapsConnection.edges.map((d) => {
         return {
-          accountId: d.node.account.id,
+          // accountId: d.node.account.id,
           amountFrom: d.node.amountFromFilled || d.node.amountFrom,
           assetFrom: d.node.assetFrom,
           // fix for bug in subsquid
@@ -239,21 +244,21 @@ export default {
           id: d.node.id
         }
       })
-      swapsStore.data.splice(0, swapsStore.data.length, ...mapped)
+      swapStore.data.splice(0, swapStore.data.length, ...mapped)
     })
 
     watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = swapsStore.pagination
+      const { rowsPerPage, rowsNumber } = swapStore.pagination
 
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = swapsStore.pagination.page = page
+      pagination.value.page = swapStore.pagination.page = page
       setVariables(first, after)
     })
 
     function setVariables (first = 10, after = null) {
-      swapsStore.variables.first = first
-      swapsStore.variables.after = after
+      swapStore.variables.first = first
+      swapStore.variables.after = after
     }
 
     function onRequest (props) {
@@ -264,7 +269,7 @@ export default {
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
 
-      pagination.value = swapsStore.pagination = extend(false, swapsStore.pagination, props.pagination)
+      pagination.value = swapStore.pagination = extend(false, swapStore.pagination, props.pagination)
 
       setVariables(first, after)
     }
@@ -273,7 +278,7 @@ export default {
       loading: result.fetching,
       error: result.error,
       columns,
-      data: swapsStore.data,
+      data: swapStore.data,
       pagination,
       onRequest,
       maxPages,
