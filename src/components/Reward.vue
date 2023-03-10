@@ -1,8 +1,8 @@
 <template>
-  <q-page padding>
+  <div>
     <q-table
-      id="bonds-data"
-      title="Bonds"
+      id="reward-data"
+      title="Rewards"
       :loading="loading"
       :columns="columns"
       :rows="data"
@@ -30,36 +30,44 @@
             </a>
           </q-td>
 
-          <q-td key="timestamp" :props="props">
-            {{  formatDateTimeInternational(props.row.timestamp) }}
+          <q-td key="era" :props="props">
+            {{ props.row.era }}
           </q-td>
 
-          <q-td key="accountId" :props="props" >
-            <identicon :address="props.row.accountId" />
-            <!-- <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </a> -->
-            <router-link
-              :to="{ name: 'history', params: { address: props.row.accountId } }"
-              class="entity-link"
-            >
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </router-link>
+          <q-td key="timestamp" :props="props">
+            {{ formatDateTimeInternational(props.row.timestamp) }}
           </q-td>
+
+          <!-- <q-td key="accountId" :props="props" >
+            <identicon :address="props.row.accountId" />
+            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
+            </a>
+          </q-td> -->
 
           <q-td key="amount" :props="props">
             <span>{{ formatToken('TDFY', props.row.amount, 4) }}<q-tooltip>{{ formatToken('TDFY', props.row.amount) + ' TDFY' }}</q-tooltip></span>
           </q-td>
 
-          <q-td key="type" :props="props">
-            {{  props.row.type }}
+          <q-td key="validatorId" :props="props" >
+            <identicon :address="props.row.validatorId" />
+            <!-- <a :href="bondingValidatorUrl + props.row.validatorId" target="_blank" class="external-link">
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
+            </a> -->
+            <router-link
+              :to="{ name: 'history', params: { address: props.row.validatorId } }"
+              class="entity-link"
+            >
+              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
+              <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
+            </router-link>
           </q-td>
         </q-tr>
       </template>
     </q-table>
-  </q-page>
+  </div>
 </template>
 
 <script>
@@ -67,31 +75,46 @@ import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
 import { trimHash } from 'src/utils/addresses'
-import { useBondsStore } from 'src/stores/bonds'
+import { useRewardStore } from 'src/stores/reward'
 import { formatToken } from 'src/utils/tokens'
 import { formatDateTimeInternational } from 'src/utils/time'
-import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
+import { tidechainExplorerUrl, bondingEntityUrl, bondingValidatorUrl, rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
 import Identicon from 'src/components/Identicon.vue'
 
 export default {
-  name: 'Bonds',
+  name: 'Reward',
 
   components: {
     Identicon
   },
 
-  setup () {
-    const bondsStore = useBondsStore()
-    const currentPage = ref(bondsStore.pagination.page)
-    const pagination = ref(bondsStore.pagination)
+  props: {
+    account: String
+  },
+
+  setup (props) {
+    const rewardStore = useRewardStore()
+    const currentPage = ref(rewardStore.pagination.page)
+    const pagination = ref(rewardStore.pagination)
+    const selectedAddress = ref(props.account)
+
+    rewardStore.variables.id_eq = selectedAddress.value
 
     const columns = [
       {
         label: 'Block',
         name: 'blockNumber',
         field: 'blockNumber',
+        required: true,
+        align: 'left',
+        sortable: false
+      },
+      {
+        label: 'Era',
+        name: 'era',
+        field: 'era',
         required: true,
         align: 'left',
         sortable: false
@@ -104,14 +127,14 @@ export default {
         align: 'left',
         sortable: false
       },
-      {
-        label: 'Account',
-        name: 'accountId',
-        field: 'accountId',
-        required: true,
-        align: 'left',
-        sortable: false
-      },
+      // {
+      //   label: 'Account',
+      //   name: 'accountId',
+      //   field: 'accountId',
+      //   required: true,
+      //   align: 'left',
+      //   sortable: false
+      // },
       {
         label: 'Amount',
         name: 'amount',
@@ -121,36 +144,34 @@ export default {
         sortable: false
       },
       {
-        label: 'Type',
-        name: 'type',
-        field: 'type',
+        label: 'Validator',
+        name: 'validatorId',
+        field: 'validatorId',
         required: true,
         align: 'left',
         sortable: false
       }
     ]
 
-    function bondsQuery () {
+    function rewardsQuery () {
       const result = useQuery({
         query: `
-          query MyQuery($first: Int! = 10, $after: String) {
-            bondsConnection(orderBy: blockNumber_DESC, first: $first, after: $after) {
-              totalCount
-              edges {
-                node {
-                  account {
-                    id
-                  }
-                  amount
-                  blockNumber
-                  extrinsicHash
-                  id
-                  timestamp
-                  type
-                }
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          rewardsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+            totalCount
+            edges {
+              node {
+                amount
+                blockNumber
+                era
+                extrinsicHash
+                id
+                timestamp
+                validatorId
               }
             }
           }
+        }
         `,
         variables
       })
@@ -158,29 +179,42 @@ export default {
       return result
     }
 
-    const variables = computed(() => bondsStore.variables)
+    const variables = computed(() => rewardStore.variables)
 
     const maxPages = computed(() => {
       let extra = 0
-      if (bondsStore.pagination.rowsPerPage === 0) return 1
-      if (bondsStore.pagination.rowsNumber % bondsStore.pagination.rowsPerPage) extra = 1
-      return bondsStore.pagination.rowsNumber / bondsStore.pagination.rowsPerPage + extra
+      if (rewardStore.pagination.rowsPerPage === 0) return 1
+      if (rewardStore.pagination.rowsNumber % rewardStore.pagination.rowsPerPage) extra = 1
+      return rewardStore.pagination.rowsNumber / rewardStore.pagination.rowsPerPage + extra
     })
 
-    const result = bondsQuery()
+    watch(() => props.account, () => {
+      selectedAddress.value = props.account
+    })
+
+    watch(selectedAddress, () => {
+      rewardStore.variables.id_eq = selectedAddress.value
+    })
+
+    const result = rewardsQuery()
+
+    watch(result.error, (error) => {
+      console.log(error)
+    })
 
     watch(result.data, (data) => {
       if (!data) return
 
       // total rows available
-      bondsStore.pagination.rowsNumber = data.bondsConnection.totalCount
-
-      const mapped = data.bondsConnection.edges.map((d) => {
+      rewardStore.pagination.rowsNumber = data.rewardsConnection.totalCount
+      // console.log(data.rewardsConnection.edges)
+      const mapped = data.rewardsConnection.edges.map((d) => {
         return {
-          accountId: d.node.account.id,
+          // accountId: d.node.account.id,
           amount: d.node.amount,
-          type: d.node.type,
+          validatorId: d.node.validatorId,
           blockNumber: d.node.blockNumber,
+          era: d.node.era,
           // extrinsicHash: d.node.extrinsicHash,
           // proposalHash: d.node.proposalHash,
           timestamp: d.node.timestamp,
@@ -188,21 +222,22 @@ export default {
           id: d.node.id
         }
       })
-      bondsStore.data.splice(0, bondsStore.data.length, ...mapped)
+      rewardStore.data.splice(0, rewardStore.data.length, ...mapped)
+      console.log(rewardStore.data)
     })
 
     watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = bondsStore.pagination
+      const { rowsPerPage, rowsNumber } = rewardStore.pagination
 
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = bondsStore.pagination.page = page
+      pagination.value.page = rewardStore.pagination.page = page
       setVariables(first, after)
     })
 
     function setVariables (first = 10, after = null) {
-      bondsStore.variables.first = first
-      bondsStore.variables.after = after
+      rewardStore.variables.first = first
+      rewardStore.variables.after = after
     }
 
     function onRequest (props) {
@@ -213,7 +248,7 @@ export default {
       const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
       const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
 
-      pagination.value = bondsStore.pagination = extend(false, bondsStore.pagination, props.pagination)
+      pagination.value = rewardStore.pagination = extend(false, rewardStore.pagination, props.pagination)
 
       setVariables(first, after)
     }
@@ -222,7 +257,7 @@ export default {
       loading: result.fetching,
       error: result.error,
       columns,
-      data: bondsStore.data,
+      data: rewardStore.data,
       pagination,
       onRequest,
       maxPages,
@@ -234,7 +269,8 @@ export default {
       rowsPerPageOptions,
       matCheckCircle,
       matCancel,
-      bondingEntityUrl
+      bondingEntityUrl,
+      bondingValidatorUrl
     }
   }
 }

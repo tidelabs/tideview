@@ -26,17 +26,17 @@
         <q-tr>
           <q-td key="accountId" :props="props" >
             <identicon :address="props.row.accountId" />
-            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
+            <!-- <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </a>
-            <!-- <router-link
-              :to="{ name: 'account', params: { address: props.row.accountId } }"
+            </a> -->
+            <router-link
+              :to="{ name: 'history', params: { address: props.row.accountId } }"
               class="entity-link"
             >
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
               <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </router-link> -->
+            </router-link>
           </q-td>
           <q-td key="role" :props="props">
             <span>{{ props.row.role }}</span>
