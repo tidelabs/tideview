@@ -12,38 +12,27 @@
       @request="onRequest"
     >
       <template v-slot:pagination>
-        <q-pagination
+        <Pagination
           v-model="currentPage"
           :max="maxPages"
-          :max-pages="6"
-          boundary-numbers
-          :text-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-text-color="$q.dark.isActive ? 'black' : 'white'"
         />
       </template>
       <template v-slot:body="props">
         <q-tr>
           <q-td key="blockNumber" :props="props">
-            <a :href="tidechainExplorerUrl + props.row.blockNumber" target="_blank" class="external-link">
-              {{ props.row.blockNumber }}
-            </a>
+            <BlockNumber :blockNumber="props.row.blockNumber" />
           </q-td>
 
           <q-td key="timestamp" :props="props">
-            {{  formatDateTimeInternational(props.row.timestamp) }}
+            <DateTimeInternational :timestamp="props.row.timestamp" />
           </q-td>
 
-          <!-- <q-td key="accountId" :props="props" >
-            <identicon :address="props.row.accountId" />
-            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </a>
-          </q-td> -->
+          <q-td key="accountId" :props="props" >
+            <Account :accountId="props.row.accountId" :selectedAccount="account" />
+          </q-td>
 
           <q-td key="amount" :props="props">
-            <span>{{ formatToken('TDFY', props.row.amount, 4) }}<q-tooltip>{{ formatToken('TDFY', props.row.amount) + ' TDFY' }}</q-tooltip></span>
+            <TokenDisplay symbol="TDFY" :amount="props.row.amount" />
           </q-td>
 
           <q-td key="type" :props="props">
@@ -59,24 +48,32 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
-import { trimHash } from 'src/utils/addresses'
 import { useBondStore } from 'src/stores/bond'
-import { formatToken } from 'src/utils/tokens'
-import { formatDateTimeInternational } from 'src/utils/time'
-import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
+import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
-// import Identicon from 'src/components/Identicon.vue'
+import Pagination from 'src/components/Pagination.vue'
+import BlockNumber from './BlockNumber.vue'
+import DateTimeInternational from './DateTimeInternational.vue'
+import Account from './Account.vue'
+import TokenDisplay from './TokenDisplay.vue'
 
 export default {
   name: 'Bonds',
 
-  // components: {
-  //   Identicon
-  // },
+  components: {
+    Pagination,
+    BlockNumber,
+    DateTimeInternational,
+    Account,
+    TokenDisplay
+  },
 
   props: {
-    account: String
+    account: {
+      type: String,
+      default: null
+    }
   },
 
   setup (props) {
@@ -104,14 +101,14 @@ export default {
         align: 'left',
         sortable: false
       },
-      // {
-      //   label: 'Account',
-      //   name: 'accountId',
-      //   field: 'accountId',
-      //   required: true,
-      //   align: 'left',
-      //   sortable: false
-      // },
+      {
+        label: 'Account',
+        name: 'accountId',
+        field: 'accountId',
+        required: true,
+        align: 'left',
+        sortable: false
+      },
       {
         label: 'Amount',
         name: 'amount',
@@ -138,6 +135,9 @@ export default {
               totalCount
               edges {
                 node {
+                  account {
+                    id
+                  }
                   amount
                   blockNumber
                   extrinsicHash
@@ -175,14 +175,18 @@ export default {
     const result = bondsQuery()
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        // clear previous data, if any
+        bondStore.data.splice(0, bondStore.data.length)
+        return
+      }
 
       // total rows available
       bondStore.pagination.rowsNumber = data.bondsConnection.totalCount
 
       const mapped = data.bondsConnection.edges.map((d) => {
         return {
-          // accountId: d.node.account.id,
+          accountId: d.node.account.id,
           amount: d.node.amount,
           type: d.node.type,
           blockNumber: d.node.blockNumber,
@@ -228,18 +232,14 @@ export default {
       error: result.error,
       columns,
       data: bondStore.data,
+      selectedAddress,
       pagination,
       onRequest,
       maxPages,
       currentPage,
-      trimHash,
-      formatToken,
-      formatDateTimeInternational,
-      tidechainExplorerUrl,
       rowsPerPageOptions,
       matCheckCircle,
-      matCancel,
-      bondingEntityUrl
+      matCancel
     }
   }
 }

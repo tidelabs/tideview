@@ -12,66 +12,31 @@
       @request="onRequest"
     >
       <template v-slot:pagination>
-        <q-pagination
+        <Pagination
           v-model="currentPage"
           :max="maxPages"
-          :max-pages="6"
-          boundary-numbers
-          :text-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-text-color="$q.dark.isActive ? 'black' : 'white'"
         />
       </template>
       <template v-slot:body="props">
         <q-tr>
           <q-td key="blockNumber" :props="props">
-            <a :href="tidechainExplorerUrl + props.row.blockNumber" target="_blank" class="external-link">
-              {{ props.row.blockNumber }}
-            </a>
+            <BlockNumber :blockNumber="props.row.blockNumber" />
           </q-td>
 
           <q-td key="timestamp" :props="props">
-            {{  formatDateTimeInternational(props.row.timestamp) }}
+            <DateTimeInternational :timestamp="props.row.timestamp" />
           </q-td>
 
           <q-td key="fromId" :props="props" >
-            <div v-if="props.row.fromId === selectedAddress"><q-badge>This Account</q-badge></div>
-            <div v-else>
-              <identicon :address="props.row.fromId" />
-              <!-- <a :href="bondingEntityUrl + props.row.fromId" target="_blank" class="external-link">
-                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-                <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
-              </a> -->
-              <router-link
-                :to="{ name: 'history', params: { address: props.row.fromId } }"
-                class="entity-link"
-              >
-                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-                <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
-              </router-link>
-            </div>
+            <Account :accountId="props.row.fromId" :selectedAccount="account" />
           </q-td>
 
           <q-td key="toId" :props="props" >
-            <div v-if="props.row.toId === selectedAddress"><q-badge>This Account</q-badge></div>
-            <div v-else>
-              <identicon :address="props.row.toId" />
-              <!-- <a :href="bondingEntityUrl + props.row.toId" target="_blank" class="external-link">
-                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-                <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
-              </a> -->
-              <router-link
-                :to="{ name: 'history', params: { address: props.row.toId } }"
-                class="entity-link"
-              >
-                <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.toId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-                <span v-else class="q-ml-sm">{{ props.row.toId }}</span>
-              </router-link>
-            </div>
+            <Account :accountId="props.row.toId" :selectedAccount="account" />
           </q-td>
 
           <q-td key="amount" :props="props">
-            <span>{{ formatToken(props.row.asset, props.row.amount, 4) }}<q-tooltip>{{ formatToken(props.row.asset, props.row.amount) + ' ' + props.row.asset }}</q-tooltip></span>
+            <TokenDisplay :symbol="props.row.asset" :amount="props.row.amount" />
           </q-td>
 
           <q-td key="asset" :props="props">
@@ -92,24 +57,32 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
-import { trimHash } from 'src/utils/addresses'
 import { useTransferStore } from 'src/stores/transfer'
-import { formatToken } from 'src/utils/tokens'
-import { formatDateTimeInternational } from 'src/utils/time'
-import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
+import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
-import Identicon from 'src/components/Identicon.vue'
+import Pagination from 'src/components/Pagination.vue'
+import BlockNumber from './BlockNumber.vue'
+import DateTimeInternational from './DateTimeInternational.vue'
+import Account from './Account.vue'
+import TokenDisplay from './TokenDisplay.vue'
 
 export default {
   name: 'Transfer',
 
   components: {
-    Identicon
+    Pagination,
+    BlockNumber,
+    DateTimeInternational,
+    Account,
+    TokenDisplay
   },
 
   props: {
-    account: String
+    account: {
+      type: String,
+      default: null
+    }
   },
 
   setup (props) {
@@ -290,14 +263,9 @@ export default {
       onRequest,
       maxPages,
       currentPage,
-      trimHash,
-      formatToken,
-      formatDateTimeInternational,
-      tidechainExplorerUrl,
       rowsPerPageOptions,
       matCheckCircle,
       matCancel,
-      bondingEntityUrl,
       selectedAddress
     }
   }
