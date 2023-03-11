@@ -84,7 +84,7 @@ export default {
     const rewardStore = useRewardStore()
     const currentPage = ref(rewardStore.pagination.page)
     const pagination = ref(rewardStore.pagination)
-    const selectedAddress = ref(props.account)
+    const selectedAddress = ref(props.account || null)
 
     rewardStore.variables.id_eq = selectedAddress.value
 

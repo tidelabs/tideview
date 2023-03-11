@@ -79,7 +79,7 @@ export default {
     const depositStore = useDepositStore()
     const currentPage = ref(depositStore.pagination.page)
     const pagination = ref(depositStore.pagination)
-    const selectedAddress = ref(props.account)
+    const selectedAddress = ref(props.account || null)
 
     depositStore.variables.id_eq = selectedAddress.value
 

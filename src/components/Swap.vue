@@ -98,7 +98,7 @@ export default {
     const swapStore = useSwapStore()
     const currentPage = ref(swapStore.pagination.page)
     const pagination = ref(swapStore.pagination)
-    const selectedAddress = ref(props.account)
+    const selectedAddress = ref(props.account || null)
 
     swapStore.variables.id_eq = selectedAddress.value
 

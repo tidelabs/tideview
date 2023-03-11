@@ -80,7 +80,7 @@ export default {
     const bondStore = useBondStore()
     const currentPage = ref(bondStore.pagination.page)
     const pagination = ref(bondStore.pagination)
-    const selectedAddress = ref(props.account)
+    const selectedAddress = ref(props.account || null)
 
     bondStore.variables.id_eq = selectedAddress.value
 
