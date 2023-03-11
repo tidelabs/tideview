@@ -27,7 +27,8 @@
       <Transfer :account="selectedAddress" />
       <Withdrawal :account="selectedAddress" />
       <Deposit :account="selectedAddress" />
-      <Bond :account="selectedAddress" :showAll="false" />
+      <Bond :account="selectedAddress" />
+      <ActiveBond :account="selectedAddress" />
     </div>
 </q-page>
 </template>
@@ -45,6 +46,7 @@ import Transfer from 'src/components/Transfer.vue'
 import Withdrawal from 'src/components/Withdrawal.vue'
 import Deposit from 'src/components/Deposit.vue'
 import Bond from 'src/components/Bond.vue'
+import ActiveBond from 'src/components/ActiveBond.vue'
 
 export default {
   name: 'History',
@@ -56,7 +58,8 @@ export default {
     Transfer,
     Withdrawal,
     Deposit,
-    Bond
+    Bond,
+    ActiveBond
   },
 
   setup () {
@@ -75,7 +78,7 @@ export default {
         if (addr !== route.params.address) {
           // push the updated route
           router.push({
-            path: '/history',
+            name: 'history',
             params: {
               address: addr
             }
