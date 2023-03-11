@@ -12,22 +12,15 @@
       @request="onRequest"
     >
       <template v-slot:pagination>
-        <q-pagination
+        <Pagination
           v-model="currentPage"
           :max="maxPages"
-          :max-pages="6"
-          boundary-numbers
-          :text-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-text-color="$q.dark.isActive ? 'black' : 'white'"
         />
       </template>
       <template v-slot:body="props">
         <q-tr>
           <q-td key="blockNumber" :props="props">
-            <a :href="tidechainExplorerUrl + props.row.blockNumber" target="_blank" class="external-link">
-              {{ props.row.blockNumber }}
-            </a>
+            <BlockNumber :blockNumber="props.row.blockNumber" />
           </q-td>
 
           <q-td key="era" :props="props">
@@ -35,34 +28,19 @@
           </q-td>
 
           <q-td key="timestamp" :props="props">
-            {{ formatDateTimeInternational(props.row.timestamp) }}
+            <DateTimeInternational :timestamp="props.row.timestamp" />
           </q-td>
 
-          <!-- <q-td key="accountId" :props="props" >
-            <identicon :address="props.row.accountId" />
-            <a :href="bondingEntityUrl + props.row.accountId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.accountId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.accountId }}</span>
-            </a>
-          </q-td> -->
+          <q-td key="accountId" :props="props" >
+            <Account :accountId="props.row.accountId" :selectedAccount="account" />
+          </q-td>
 
           <q-td key="amount" :props="props">
-            <span>{{ formatToken('TDFY', props.row.amount, 4) }}<q-tooltip>{{ formatToken('TDFY', props.row.amount) + ' TDFY' }}</q-tooltip></span>
+            <TokenDisplay symbol="TDFY" :amount="props.row.amount" />
           </q-td>
 
           <q-td key="validatorId" :props="props" >
-            <identicon :address="props.row.validatorId" />
-            <!-- <a :href="bondingValidatorUrl + props.row.validatorId" target="_blank" class="external-link">
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
-            </a> -->
-            <router-link
-              :to="{ name: 'history', params: { address: props.row.validatorId } }"
-              class="entity-link"
-            >
-              <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.validatorId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
-              <span v-else class="q-ml-sm">{{ props.row.validatorId }}</span>
-            </router-link>
+            <Account :accountId="props.row.validatorId" />
           </q-td>
         </q-tr>
       </template>
@@ -74,24 +52,32 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
-import { trimHash } from 'src/utils/addresses'
 import { useRewardStore } from 'src/stores/reward'
-import { formatToken } from 'src/utils/tokens'
-import { formatDateTimeInternational } from 'src/utils/time'
-import { tidechainExplorerUrl, bondingEntityUrl, bondingValidatorUrl, rowsPerPageOptions } from 'src/utils/constants'
+import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
-import Identicon from 'src/components/Identicon.vue'
+import Pagination from 'src/components/Pagination.vue'
+import BlockNumber from './BlockNumber.vue'
+import DateTimeInternational from './DateTimeInternational.vue'
+import Account from './Account.vue'
+import TokenDisplay from './TokenDisplay.vue'
 
 export default {
   name: 'Reward',
 
   components: {
-    Identicon
+    Pagination,
+    BlockNumber,
+    DateTimeInternational,
+    Account,
+    TokenDisplay
   },
 
   props: {
-    account: String
+    account: {
+      type: String,
+      default: null
+    }
   },
 
   setup (props) {
@@ -127,14 +113,14 @@ export default {
         align: 'left',
         sortable: false
       },
-      // {
-      //   label: 'Account',
-      //   name: 'accountId',
-      //   field: 'accountId',
-      //   required: true,
-      //   align: 'left',
-      //   sortable: false
-      // },
+      {
+        label: 'Account',
+        name: 'accountId',
+        field: 'accountId',
+        required: true,
+        align: 'left',
+        sortable: false
+      },
       {
         label: 'Amount',
         name: 'amount',
@@ -161,6 +147,9 @@ export default {
             totalCount
             edges {
               node {
+                account {
+                    id
+                  }
                 amount
                 blockNumber
                 era
@@ -210,7 +199,7 @@ export default {
       // console.log(data.rewardsConnection.edges)
       const mapped = data.rewardsConnection.edges.map((d) => {
         return {
-          // accountId: d.node.account.id,
+          accountId: d.node.account.id,
           amount: d.node.amount,
           validatorId: d.node.validatorId,
           blockNumber: d.node.blockNumber,
@@ -262,15 +251,9 @@ export default {
       onRequest,
       maxPages,
       currentPage,
-      trimHash,
-      formatToken,
-      formatDateTimeInternational,
-      tidechainExplorerUrl,
       rowsPerPageOptions,
       matCheckCircle,
-      matCancel,
-      bondingEntityUrl,
-      bondingValidatorUrl
+      matCancel
     }
   }
 }

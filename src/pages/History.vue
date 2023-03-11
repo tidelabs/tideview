@@ -27,7 +27,7 @@
       <Transfer :account="selectedAddress" />
       <Withdrawal :account="selectedAddress" />
       <Deposit :account="selectedAddress" />
-      <Bond :account="selectedAddress" />
+      <Bond :account="selectedAddress" :showAll="false" />
     </div>
 </q-page>
 </template>
@@ -35,7 +35,7 @@
 <script>
 import { ref, watch, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { isValidAddress } from 'src/utils/addresses'
+import { isValidAddress, trimHash } from 'src/utils/addresses'
 import { bondingEntityUrl } from 'src/utils/constants'
 
 import Identicon from 'src/components/Identicon.vue'
@@ -93,6 +93,7 @@ export default {
     return {
       selectedAddress,
       isValidAddress,
+      trimHash,
       bondingEntityUrl
     }
   }

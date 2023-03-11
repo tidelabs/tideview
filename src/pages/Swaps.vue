@@ -170,7 +170,7 @@ export default {
       const result = useQuery({
         query: `
           query MyQuery($first: Int! = 10, $after: String) {
-            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit"}) {
+            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit", isMarketMaker_not_eq: true}) {
               totalCount
               edges {
                 node {

@@ -12,29 +12,25 @@
       @request="onRequest"
     >
       <template v-slot:pagination>
-        <q-pagination
+        <Pagination
           v-model="currentPage"
           :max="maxPages"
-          :max-pages="6"
-          boundary-numbers
-          :text-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-color="$q.dark.isActive ? 'yellow' : 'primary'"
-          :active-text-color="$q.dark.isActive ? 'black' : 'white'"
         />
       </template>
       <template v-slot:body="props">
         <q-tr>
           <q-td key="blockNumber" :props="props">
-            <a :href="tidechainExplorerUrl + props.row.blockNumber" target="_blank" class="external-link">
-              {{ props.row.blockNumber }}
-            </a>
+            <BlockNumber :blockNumber="props.row.blockNumber" />
           </q-td>
+
           <q-td key="timestamp" :props="props">
-            {{  formatDateTimeInternational(props.row.timestamp) }}
+            <DateTimeInternational :timestamp="props.row.timestamp" />
           </q-td>
+
           <q-td key="amount" :props="props">
-            <span>{{ formatToken(props.row.asset, props.row.amount, 4) }}<q-tooltip>{{ formatToken(props.row.asset, props.row.amount) + ' ' + props.row.asset }}</q-tooltip></span>
+            <TokenDisplay :symbol="props.row.asset" :amount="props.row.amount" />
           </q-td>
+
           <q-td key="asset" :props="props">
             {{  props.row.asset }}
           </q-td>
@@ -48,23 +44,29 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { extend } from 'quasar'
-import { trimHash } from 'src/utils/addresses'
 import { useWithdrawalStore } from 'src/stores/withdrawal'
-import { formatToken } from 'src/utils/tokens'
-import { formatDateTimeInternational } from 'src/utils/time'
-import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/utils/constants'
+import { rowsPerPageOptions } from 'src/utils/constants'
 
-// import Identicon from 'src/components/Identicon.vue'
+import Pagination from 'src/components/Pagination.vue'
+import BlockNumber from './BlockNumber.vue'
+import DateTimeInternational from './DateTimeInternational.vue'
+import TokenDisplay from './TokenDisplay.vue'
 
 export default {
   name: 'Withdrawal',
 
-  // components: {
-  //   Identicon
-  // },
+  components: {
+    Pagination,
+    BlockNumber,
+    DateTimeInternational,
+    TokenDisplay
+  },
 
   props: {
-    account: String
+    account: {
+      type: String,
+      default: null
+    }
   },
 
   setup (props) {
@@ -118,6 +120,9 @@ export default {
               totalCount
               edges {
                 node {
+                  account {
+                    id
+                  }
                   amount
                   asset
                   blockNumber
@@ -214,12 +219,7 @@ export default {
       onRequest,
       maxPages,
       currentPage,
-      trimHash,
-      formatToken,
-      formatDateTimeInternational,
-      tidechainExplorerUrl,
-      rowsPerPageOptions,
-      bondingEntityUrl
+      rowsPerPageOptions
     }
   }
 }
