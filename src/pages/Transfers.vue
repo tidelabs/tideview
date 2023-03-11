@@ -41,7 +41,7 @@
               <span v-else class="q-ml-sm">{{ props.row.fromId }}</span>
             </a> -->
             <router-link
-              :to="{ name: 'history', params: { account: props.row.fromId } }"
+              :to="{ name: 'history', params: { address: props.row.fromId } }"
               class="entity-link"
             >
               <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(props.row.fromId, 16) }}<q-tooltip>{{ props.row.fromId }}</q-tooltip></span>
