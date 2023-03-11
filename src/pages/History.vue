@@ -22,6 +22,7 @@
         </a>
       </div>
 
+      <Balance :account="selectedAddress" />
       <Reward :account="selectedAddress" />
       <Swap :account="selectedAddress" />
       <Transfer :account="selectedAddress" />
@@ -47,6 +48,7 @@ import Withdrawal from 'src/components/Withdrawal.vue'
 import Deposit from 'src/components/Deposit.vue'
 import Bond from 'src/components/Bond.vue'
 import ActiveBond from 'src/components/ActiveBond.vue'
+import Balance from 'src/components/Balance.vue'
 
 export default {
   name: 'History',
@@ -59,7 +61,8 @@ export default {
     Withdrawal,
     Deposit,
     Bond,
-    ActiveBond
+    ActiveBond,
+    Balance
   },
 
   setup () {
