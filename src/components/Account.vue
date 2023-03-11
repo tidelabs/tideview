@@ -1,6 +1,8 @@
 <template>
   <div v-if="accountId">
-    <div v-if="selectedAccount && accountId === selectedAccount"><q-badge>This Account</q-badge><q-tooltip>{{ accountId }}</q-tooltip></div>
+    <div v-if="accountId === 'fhCBCt9jfV4TJ2c4P8fymVHgTE7oXtQhNHcg5AShpF4x1S4Gr'"><q-badge color="green-8" text-color="white">All Time High</q-badge></div>
+    <div v-else-if="accountId === 'fhCBCt9jfV4TJ2dvdhAkca1FQqxbEjyyXe7SczZ9V8TLuK7pb'"><q-badge color="orange-8" text-color="white">Sunrise Rewards</q-badge></div>
+    <div v-else-if="selectedAccount && accountId === selectedAccount"><q-badge>This Account</q-badge><q-tooltip>{{ accountId }}</q-tooltip></div>
     <div v-else>
       <Identicon :address="accountId" />
       <router-link
