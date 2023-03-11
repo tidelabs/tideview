@@ -31,6 +31,10 @@
             <Account :accountId="props.row.accountId" :selectedAccount="account" />
           </q-td>
 
+          <q-td key="slippage" :props="props" >
+            <Slippage :amount="props.row.slippage" />
+          </q-td>
+
           <q-td key="amountFrom" :props="props">
             <TokenDisplay :symbol="props.row.assetFrom" :amount="props.row.amountFrom" />
           </q-td>
@@ -69,6 +73,7 @@ import BlockNumber from './BlockNumber.vue'
 import DateTimeInternational from './DateTimeInternational.vue'
 import Account from './Account.vue'
 import TokenDisplay from './TokenDisplay.vue'
+import Slippage from './Slippage.vue'
 
 export default {
   name: 'Swaps',
@@ -78,7 +83,8 @@ export default {
     BlockNumber,
     DateTimeInternational,
     Account,
-    TokenDisplay
+    TokenDisplay,
+    Slippage
   },
 
   props: {
@@ -119,6 +125,14 @@ export default {
         field: 'accountId',
         required: true,
         align: 'left',
+        sortable: false
+      },
+      {
+        label: 'Slippage',
+        name: 'slippage',
+        field: 'slippage',
+        required: true,
+        align: 'right',
         sortable: false
       },
       {
@@ -240,11 +254,12 @@ export default {
           // proposalHash: d.node.proposalHash,
           timestamp: d.node.timestamp,
           // transactionId: d.node.transactionId,
-          // success: d.node.success,
+          success: d.node.success,
           id: d.node.id
         }
       })
       swapStore.data.splice(0, swapStore.data.length, ...mapped)
+      // console.log(swapStore.data)
     })
 
     watch(currentPage, (page) => {
