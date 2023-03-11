@@ -1,5 +1,5 @@
 <template>
-  <q-page padding>
+  <div>
     <q-table
       id="active-bond-data"
       title="Active Bonds"
@@ -45,7 +45,7 @@
         </q-tr>
       </template>
     </q-table>
-  </q-page>
+  </div>
 </template>
 
 <script>
