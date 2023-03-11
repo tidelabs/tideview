@@ -212,7 +212,7 @@ export default {
         }
       })
       rewardStore.data.splice(0, rewardStore.data.length, ...mapped)
-      console.log(rewardStore.data)
+      // console.log(rewardStore.data)
     })
 
     watch(currentPage, (page) => {

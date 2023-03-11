@@ -49,6 +49,10 @@
             </router-link>
           </q-td>
 
+          <q-td key="slippage" :props="props" >
+            <Slippage :amount="props.row.slippage" />
+          </q-td>
+
           <q-td key="amountFrom" :props="props">
             <span>{{ formatToken(props.row.assetFrom, props.row.amountFrom, 4) }}<q-tooltip>{{ formatToken(props.row.assetFrom, props.row.amountFrom) + ' ' + props.row.assetFrom }}</q-tooltip></span>
           </q-td>
@@ -86,12 +90,14 @@ import { tidechainExplorerUrl, bondingEntityUrl, rowsPerPageOptions } from 'src/
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 
 import Identicon from 'src/components/Identicon.vue'
+import Slippage from 'src/components/Slippage.vue'
 
 export default {
   name: 'Swaps',
 
   components: {
-    Identicon
+    Identicon,
+    Slippage
   },
 
   setup () {
@@ -122,6 +128,14 @@ export default {
         field: 'accountId',
         required: true,
         align: 'left',
+        sortable: false
+      },
+      {
+        label: 'Slippage',
+        name: 'slippage',
+        field: 'slippage',
+        required: true,
+        align: 'right',
         sortable: false
       },
       {
