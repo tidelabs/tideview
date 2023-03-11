@@ -89,7 +89,7 @@ export default {
     const transferStore = useTransferStore()
     const currentPage = ref(transferStore.pagination.page)
     const pagination = ref(transferStore.pagination)
-    const selectedAddress = ref(props.account)
+    const selectedAddress = ref(props.account || null)
 
     transferStore.variables.id_eq = selectedAddress.value
 

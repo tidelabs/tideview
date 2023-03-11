@@ -73,7 +73,7 @@ export default {
     const withdrawalStore = useWithdrawalStore()
     const currentPage = ref(withdrawalStore.pagination.page)
     const pagination = ref(withdrawalStore.pagination)
-    const selectedAddress = ref(props.account)
+    const selectedAddress = ref(props.account || null)
 
     withdrawalStore.variables.id_eq = selectedAddress.value
 
