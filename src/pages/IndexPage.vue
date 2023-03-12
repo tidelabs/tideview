@@ -1,7 +1,7 @@
 <template>
   <q-page class="flex flex-center">
     <img
-      :src="$q.dark.isActive ? '/dark-logo.svg' : '/logo.svg'"
+      src="/logo.svg"
       style="width: 200px; height: 200px"
     >
   </q-page>
