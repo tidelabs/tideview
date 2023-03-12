@@ -18,7 +18,7 @@
         <identicon :address="selectedAddress" />
         <a :href="bondingEntityUrl + selectedAddress" target="_blank" class="external-link">
           <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(selectedAddress, 16) }}<q-tooltip>{{ selectedAddress }}</q-tooltip></span>
-          <span v-else class="q-ml-sm">{{ selectedAddress }}</span>
+          <span v-else class="q-ml-sm">{{ selectedAddress }}<q-tooltip>Click to view on the Bonding Dashboard</q-tooltip></span>
         </a>
       </div>
 

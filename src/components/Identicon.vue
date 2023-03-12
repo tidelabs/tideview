@@ -69,7 +69,7 @@ export default {
 .identity-svg-wrapper {
   max-width: 22px;
   max-height: 22px;
-  // margin: 1px;
+  cursor: copy;
 }
 
 </style>

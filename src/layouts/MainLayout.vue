@@ -11,11 +11,12 @@
           @click="toggleLeftDrawer"
         /> -->
 
-        <q-toolbar-title style="max-width: 100px;">
+        <q-toolbar-title style="max-width: 130px;">
           <router-link
               :to="{ name: 'home' }"
               class="home-link"
             >
+            <q-icon name="img:logo.svg" />
             Tideview
           </router-link>
         </q-toolbar-title>
