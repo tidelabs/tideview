@@ -1,6 +1,6 @@
 <template>
   <a :href="tidechainExplorerUrl + blockNumber" target="_blank" class="external-link">
-    {{ blockNumber }}
+    {{ blockNumber }}<q-tooltip>Click to view on Tidefi Explorer</q-tooltip>
   </a>
 </template>
 
