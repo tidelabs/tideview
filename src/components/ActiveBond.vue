@@ -51,9 +51,9 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useActiveBondStore } from 'src/stores/activeBond'
 import { rowsPerPageOptions } from 'src/utils/constants'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import Account from './Account.vue'
@@ -72,16 +72,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const activeBondStore = useActiveBondStore()
-    const currentPage = ref(activeBondStore.pagination.page)
-    const pagination = ref(activeBondStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    activeBondStore.variables.id_eq = selectedAddress.value
+    // activeBondStore.data.splice(0, activeBondStore.data.length)
 
     const columns = [
       {
@@ -134,55 +135,56 @@ export default {
       }
     ]
 
-    function activeBondsQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-            stakersConnection(orderBy: id_ASC, first: $first, after: $after, where: {id_eq: $id_eq}) {
-              totalCount
-              edges {
-                node {
-                  activeBond
-                  id
-                  payeeType
-                  role
-                  totalReward
-                  totalSlash
-                }
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          stakersConnection(orderBy: id_ASC, first: $first, after: $after, where: {id_eq: $id_eq}) {
+            totalCount
+            edges {
+              node {
+                activeBond
+                id
+                payeeType
+                role
+                totalReward
+                totalSlash
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => activeBondStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (activeBondStore.pagination.rowsPerPage === 0) return 1
-      if (activeBondStore.pagination.rowsNumber % activeBondStore.pagination.rowsPerPage) extra = 1
-      return activeBondStore.pagination.rowsNumber / activeBondStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      activeBondStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = activeBondsQuery()
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        activeBondStore.data.splice(0, activeBondStore.data.length)
+        return
+      }
 
       // total rows available
-      activeBondStore.pagination.rowsNumber = data.stakersConnection.totalCount
+      pagination.value.rowsNumber = data.stakersConnection.totalCount
 
       const mapped = data.stakersConnection.edges.map((d) => {
         return {
@@ -197,32 +199,9 @@ export default {
       activeBondStore.data.splice(0, activeBondStore.data.length, ...mapped)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = activeBondStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = activeBondStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      activeBondStore.variables.first = first
-      activeBondStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = activeBondStore.pagination = extend(false, activeBondStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,

@@ -47,9 +47,9 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useDepositStore } from 'src/stores/deposit'
 import { rowsPerPageOptions } from 'src/utils/constants'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -72,16 +72,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const depositStore = useDepositStore()
-    const currentPage = ref(depositStore.pagination.page)
-    const pagination = ref(depositStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    depositStore.variables.id_eq = selectedAddress.value
+    // depositStore.data.splice(0, depositStore.data.length)
 
     const columns = [
       {
@@ -126,61 +127,62 @@ export default {
       }
     ]
 
-    function depositsQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-            depositsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
-              totalCount
-              edges {
-                node {
-                  account {
-                    id
-                  }
-                  amount
-                  asset
-                  blockNumber
-                  complianceLevel
-                  extrinsicHash
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          depositsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+            totalCount
+            edges {
+              node {
+                account {
                   id
-                  proposalHash
-                  timestamp
-                  transactionId
                 }
+                amount
+                asset
+                blockNumber
+                complianceLevel
+                extrinsicHash
+                id
+                proposalHash
+                timestamp
+                transactionId
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => depositStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (depositStore.pagination.rowsPerPage === 0) return 1
-      if (depositStore.pagination.rowsNumber % depositStore.pagination.rowsPerPage) extra = 1
-      return depositStore.pagination.rowsNumber / depositStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      depositStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = depositsQuery()
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        depositStore.data.splice(0, depositStore.data.length)
+        return
+      }
 
       // total rows available
-      depositStore.pagination.rowsNumber = data.depositsConnection.totalCount
+      pagination.value.rowsNumber = data.depositsConnection.totalCount
 
       const mapped = data.depositsConnection.edges.map((d) => {
         return {
@@ -198,32 +200,9 @@ export default {
       depositStore.data.splice(0, depositStore.data.length, ...mapped)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = depositStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = depositStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      depositStore.variables.first = first
-      depositStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = depositStore.pagination = extend(false, depositStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,

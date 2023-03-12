@@ -56,10 +56,10 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useTransferStore } from 'src/stores/transfer'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -82,16 +82,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const transferStore = useTransferStore()
-    const currentPage = ref(transferStore.pagination.page)
-    const pagination = ref(transferStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    transferStore.variables.id_eq = selectedAddress.value
+    // transferStore.data.splice(0, transferStore.data.length)
 
     const columns = [
       {
@@ -152,62 +153,64 @@ export default {
       }
     ]
 
-    function transfersQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-            transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {from: {id_eq: $id_eq}, OR: {to: {id_eq: $id_eq}}}) {
-              edges {
-                node {
-                  from {
-                    id
-                  }
-                  to {
-                    id
-                  }
-                  amount
-                  asset
-                  blockNumber
-                  extrinsicHash
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {from: {id_eq: $id_eq}, OR: {to: {id_eq: $id_eq}}}) {
+            totalCount
+            edges {
+              node {
+                from {
                   id
-                  success
-                  timestamp
-                  type
                 }
+                to {
+                  id
+                }
+                amount
+                asset
+                blockNumber
+                extrinsicHash
+                id
+                success
+                timestamp
+                type
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => transferStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (transferStore.pagination.rowsPerPage === 0) return 1
-      if (transferStore.pagination.rowsNumber % transferStore.pagination.rowsPerPage) extra = 1
-      return transferStore.pagination.rowsNumber / transferStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      transferStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = transfersQuery()
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        transferStore.data.splice(0, transferStore.data.length)
+        return
+      }
 
       // total rows available
-      transferStore.pagination.rowsNumber = data.transfersConnection.totalCount
+      pagination.value.rowsNumber = data.transfersConnection.totalCount
 
       const mapped = data.transfersConnection.edges.map((d) => {
         return {
@@ -227,33 +230,6 @@ export default {
       transferStore.data.splice(0, transferStore.data.length, ...mapped)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = transferStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = transferStore.pagination.page = page
-      setVariables(first, after)
-    })
-
-    function setVariables (first = 10, after = null) {
-      transferStore.variables.first = first
-      transferStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = transferStore.pagination = extend(false, transferStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
-
     return {
       loading: result.fetching,
       error: result.error,
@@ -265,8 +241,7 @@ export default {
       currentPage,
       rowsPerPageOptions,
       matCheckCircle,
-      matCancel,
-      selectedAddress
+      matCancel
     }
   }
 }

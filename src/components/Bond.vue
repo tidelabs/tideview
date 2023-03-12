@@ -47,10 +47,10 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useBondStore } from 'src/stores/bond'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -73,16 +73,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const bondStore = useBondStore()
-    const currentPage = ref(bondStore.pagination.page)
-    const pagination = ref(bondStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    bondStore.variables.id_eq = selectedAddress.value
+    // bondStore.data.splice(0, bondStore.data.length)
 
     const columns = [
       {
@@ -127,52 +128,50 @@ export default {
       }
     ]
 
-    function bondsQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-            bondsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
-              totalCount
-              edges {
-                node {
-                  account {
-                    id
-                  }
-                  amount
-                  blockNumber
-                  extrinsicHash
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          bondsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+            totalCount
+            edges {
+              node {
+                account {
                   id
-                  timestamp
-                  type
                 }
+                amount
+                blockNumber
+                extrinsicHash
+                id
+                timestamp
+                type
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => bondStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (bondStore.pagination.rowsPerPage === 0) return 1
-      if (bondStore.pagination.rowsNumber % bondStore.pagination.rowsPerPage) extra = 1
-      return bondStore.pagination.rowsNumber / bondStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      bondStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = bondsQuery()
 
     watch(result.data, (data) => {
       if (!data) {
@@ -182,7 +181,7 @@ export default {
       }
 
       // total rows available
-      bondStore.pagination.rowsNumber = data.bondsConnection.totalCount
+      pagination.value.rowsNumber = data.bondsConnection.totalCount
 
       const mapped = data.bondsConnection.edges.map((d) => {
         return {
@@ -200,39 +199,15 @@ export default {
       bondStore.data.splice(0, bondStore.data.length, ...mapped)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = bondStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = bondStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      bondStore.variables.first = first
-      bondStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = bondStore.pagination = extend(false, bondStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,
       error: result.error,
       columns,
       data: bondStore.data,
-      selectedAddress,
       pagination,
       onRequest,
       maxPages,
