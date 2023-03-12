@@ -22,14 +22,14 @@
         </a>
       </div>
 
-      <Balance :account="selectedAddress" />
-      <Reward :account="selectedAddress" />
-      <Swap :account="selectedAddress" />
-      <Transfer :account="selectedAddress" />
-      <Withdrawal :account="selectedAddress" />
-      <Deposit :account="selectedAddress" />
-      <Bond :account="selectedAddress" />
-      <ActiveBond :account="selectedAddress" />
+      <Balance :account="selectedAddress" use-account />
+      <Reward :account="selectedAddress" use-account />
+      <Swap :account="selectedAddress" use-account />
+      <Transfer :account="selectedAddress" use-account />
+      <Withdrawal :account="selectedAddress" use-account />
+      <Deposit :account="selectedAddress" use-account />
+      <Bond :account="selectedAddress" use-account />
+      <ActiveBond :account="selectedAddress" use-account />
     </div>
 </q-page>
 </template>

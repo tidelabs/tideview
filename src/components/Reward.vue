@@ -51,10 +51,10 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useRewardStore } from 'src/stores/reward'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -77,16 +77,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const rewardStore = useRewardStore()
-    const currentPage = ref(rewardStore.pagination.page)
-    const pagination = ref(rewardStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    rewardStore.variables.id_eq = selectedAddress.value
+    // rewardStore.data.splice(0, rewardStore.data.length)
 
     const columns = [
       {
@@ -139,9 +140,20 @@ export default {
       }
     ]
 
-    function rewardsQuery () {
-      const result = useQuery({
-        query: `
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
         query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
           rewardsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
             totalCount
@@ -161,41 +173,31 @@ export default {
             }
           }
         }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => rewardStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (rewardStore.pagination.rowsPerPage === 0) return 1
-      if (rewardStore.pagination.rowsNumber % rewardStore.pagination.rowsPerPage) extra = 1
-      return rewardStore.pagination.rowsNumber / rewardStore.pagination.rowsPerPage + extra
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      rewardStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = rewardsQuery()
 
     watch(result.error, (error) => {
       console.log(error)
     })
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        rewardStore.data.splice(0, rewardStore.data.length)
+        return
+      }
 
       // total rows available
-      rewardStore.pagination.rowsNumber = data.rewardsConnection.totalCount
+      pagination.value.rowsNumber = data.rewardsConnection.totalCount
       // console.log(data.rewardsConnection.edges)
       const mapped = data.rewardsConnection.edges.map((d) => {
         return {
@@ -215,32 +217,9 @@ export default {
       // console.log(rewardStore.data)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = rewardStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = rewardStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      rewardStore.variables.first = first
-      rewardStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = rewardStore.pagination = extend(false, rewardStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,

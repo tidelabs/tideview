@@ -43,15 +43,15 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useBalanceStore } from 'src/stores/balance'
 import { rowsPerPageOptions } from 'src/utils/constants'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import TokenDisplay from './TokenDisplay.vue'
 
 export default {
-  name: 'Deposits',
+  name: 'Balance',
 
   components: {
     Pagination,
@@ -62,16 +62,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const balanceStore = useBalanceStore()
-    const currentPage = ref(balanceStore.pagination.page)
-    const pagination = ref(balanceStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    balanceStore.variables.id_eq = selectedAddress.value
+    // balanceStore.data.splice(0, balanceStore.data.length)
 
     const columns = [
       {
@@ -108,58 +109,59 @@ export default {
       }
     ]
 
-    function activeBalanceQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($id_eq: String, $first: Int = 10, $after: String = "") {
-            accountsConnection(where: {id_eq: $id_eq}, orderBy: id_ASC, first: $first, after: $after) {
-              totalCount
-              edges {
-                node {
-                  id
-                  balances(orderBy: asset_ASC) {
-                    asset
-                    free
-                    reserved
-                    total
-                    updatedAt
-                  }
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($id_eq: String, $first: Int = 10, $after: String = "") {
+          accountsConnection(where: {id_eq: $id_eq}, orderBy: id_ASC, first: $first, after: $after) {
+            totalCount
+            edges {
+              node {
+                id
+                balances(orderBy: asset_ASC) {
+                  asset
+                  free
+                  reserved
+                  total
+                  updatedAt
                 }
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => balanceStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (balanceStore.pagination.rowsPerPage === 0) return 1
-      if (balanceStore.pagination.rowsNumber % balanceStore.pagination.rowsPerPage) extra = 1
-      return balanceStore.pagination.rowsNumber / balanceStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      balanceStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = activeBalanceQuery()
 
     watch(result.data, (data) => {
       console.log(result.data)
-      if (!data) return
+      if (!data) {
+        balanceStore.data.splice(0, balanceStore.data.length)
+        return
+      }
 
       // total rows available
-      balanceStore.pagination.rowsNumber = data.accountsConnection.totalCount
+      pagination.value.rowsNumber = data.accountsConnection.totalCount
 
       const mapped = []
       data.accountsConnection.edges.forEach((d) => {
@@ -175,32 +177,9 @@ export default {
       balanceStore.data.splice(0, balanceStore.data.length, ...mapped)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = balanceStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = balanceStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      balanceStore.variables.first = first
-      balanceStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = balanceStore.pagination = extend(false, balanceStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,

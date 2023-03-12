@@ -43,9 +43,9 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useWithdrawalStore } from 'src/stores/withdrawal'
 import { rowsPerPageOptions } from 'src/utils/constants'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -66,16 +66,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const withdrawalStore = useWithdrawalStore()
-    const currentPage = ref(withdrawalStore.pagination.page)
-    const pagination = ref(withdrawalStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    withdrawalStore.variables.id_eq = selectedAddress.value
+    // withdrawalStore.data.splice(0, withdrawalStore.data.length)
 
     const columns = [
       {
@@ -112,60 +113,61 @@ export default {
       }
     ]
 
-    function withdrawalsQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-            withdrawalsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
-              totalCount
-              edges {
-                node {
-                  account {
-                    id
-                  }
-                  amount
-                  asset
-                  blockNumber
-                  extrinsicHash
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          withdrawalsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+            totalCount
+            edges {
+              node {
+                account {
                   id
-                  proposalHash
-                  status
-                  timestamp
                 }
+                amount
+                asset
+                blockNumber
+                extrinsicHash
+                id
+                proposalHash
+                status
+                timestamp
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => withdrawalStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (withdrawalStore.pagination.rowsPerPage === 0) return 1
-      if (withdrawalStore.pagination.rowsNumber % withdrawalStore.pagination.rowsPerPage) extra = 1
-      return withdrawalStore.pagination.rowsNumber / withdrawalStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      withdrawalStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = withdrawalsQuery()
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        withdrawalStore.data.splice(0, withdrawalStore.data.length)
+        return
+      }
 
       // total rows available
-      withdrawalStore.pagination.rowsNumber = data.withdrawalsConnection.totalCount
+      pagination.value.rowsNumber = data.withdrawalsConnection.totalCount
 
       const mapped = data.withdrawalsConnection.edges.map((d) => {
         return {
@@ -183,32 +185,9 @@ export default {
       withdrawalStore.data.splice(0, withdrawalStore.data.length, ...mapped)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = withdrawalStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = withdrawalStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      withdrawalStore.variables.first = first
-      withdrawalStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = withdrawalStore.pagination = extend(false, withdrawalStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,

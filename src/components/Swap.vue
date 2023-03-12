@@ -63,10 +63,10 @@
 <script>
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
-import { extend } from 'quasar'
 import { useSwapStore } from 'src/stores/swap'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
+import usePagination from 'src/utils/usePagination'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -91,16 +91,17 @@ export default {
     account: {
       type: String,
       default: null
+    },
+    useAccount: {
+      type: Boolean
     }
   },
 
   setup (props) {
     const swapStore = useSwapStore()
-    const currentPage = ref(swapStore.pagination.page)
-    const pagination = ref(swapStore.pagination)
     const selectedAddress = ref(props.account || null)
 
-    swapStore.variables.id_eq = selectedAddress.value
+    // swapStore.data.splice(0, swapStore.data.length)
 
     const columns = [
       {
@@ -177,66 +178,67 @@ export default {
       }
     ]
 
-    function swapsQuery () {
-      const result = useQuery({
-        query: `
-          query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-            swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit", isMarketMaker_not_eq: true, account: {id_eq: $id_eq}}) {
-              totalCount
-              edges {
-                node {
-                  account {
-                    id
-                  }
-                  amountFrom
-                  amountFromFilled
-                  assetFrom
-                  amountTo
-                  amountToFilled
-                  assetTo
-                  blockNumber
-                  extrinsicHash
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit", isMarketMaker_not_eq: true, account: {id_eq: $id_eq}}) {
+            totalCount
+            edges {
+              node {
+                account {
                   id
-                  isMarketMaker
-                  slippage
-                  status
-                  timestamp
-                  type
                 }
+                amountFrom
+                amountFromFilled
+                assetFrom
+                amountTo
+                amountToFilled
+                assetTo
+                blockNumber
+                extrinsicHash
+                id
+                isMarketMaker
+                slippage
+                status
+                timestamp
+                type
               }
             }
           }
-        `,
-        variables
-      })
-
-      return result
-    }
-
-    const variables = computed(() => swapStore.variables)
-
-    const maxPages = computed(() => {
-      let extra = 0
-      if (swapStore.pagination.rowsPerPage === 0) return 1
-      if (swapStore.pagination.rowsNumber % swapStore.pagination.rowsPerPage) extra = 1
-      return swapStore.pagination.rowsNumber / swapStore.pagination.rowsPerPage + extra
+        }
+      `
     })
 
-    watch(() => props.account, () => {
-      selectedAddress.value = props.account
+    const variables = computed(() => {
+      return paginationVariables.value
     })
 
-    watch(selectedAddress, () => {
-      swapStore.variables.id_eq = selectedAddress.value
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
     })
-
-    const result = swapsQuery()
 
     watch(result.data, (data) => {
-      if (!data) return
+      if (!data) {
+        swapStore.data.splice(0, swapStore.data.length)
+        return
+      }
 
       // total rows available
-      swapStore.pagination.rowsNumber = data.swapsConnection.totalCount
+      pagination.value.rowsNumber = data.swapsConnection.totalCount
 
       const mapped = data.swapsConnection.edges.map((d) => {
         return {
@@ -262,32 +264,9 @@ export default {
       // console.log(swapStore.data)
     })
 
-    watch(currentPage, (page) => {
-      const { rowsPerPage, rowsNumber } = swapStore.pagination
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-      pagination.value.page = swapStore.pagination.page = page
-      setVariables(first, after)
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
-
-    function setVariables (first = 10, after = null) {
-      swapStore.variables.first = first
-      swapStore.variables.after = after
-    }
-
-    function onRequest (props) {
-      const { page, rowsPerPage, rowsNumber } = props.pagination
-
-      if (currentPage.value !== page) currentPage.value = page
-
-      const first = rowsPerPage === 0 ? rowsNumber : rowsPerPage
-      const after = page === 1 ? null : '' + ((page * rowsPerPage) - rowsPerPage)
-
-      pagination.value = swapStore.pagination = extend(false, swapStore.pagination, props.pagination)
-
-      setVariables(first, after)
-    }
 
     return {
       loading: result.fetching,
