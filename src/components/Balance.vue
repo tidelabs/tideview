@@ -44,6 +44,7 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { useBalanceStore } from 'src/stores/balance'
+import { useFilterStore } from 'src/stores/filter'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import usePagination from 'src/utils/usePagination'
 
@@ -69,6 +70,7 @@ export default {
   },
 
   setup (props) {
+    const filterStore = useFilterStore()
     const balanceStore = useBalanceStore()
     const selectedAddress = ref(props.account || null)
 
@@ -123,7 +125,7 @@ export default {
 
     const query = computed(() => {
       return `
-        query MyQuery($id_eq: String, $first: Int = 10, $after: String = "") {
+        query MyQuery($id_eq: String, $first: Int = 10, $after: String) {
           accountsConnection(where: {id_eq: $id_eq}, orderBy: id_ASC, first: $first, after: $after) {
             totalCount
             edges {
@@ -144,7 +146,16 @@ export default {
     })
 
     const variables = computed(() => {
-      return paginationVariables.value
+      const vars = {
+        ...paginationVariables.value
+      }
+      // if (filterStore.useFilter) {
+      //   if (filterStore.token) {
+      //     vars.asset_eq = filterStore.token
+      //   }
+      // }
+
+      return vars
     })
 
     const result = useQuery({
@@ -166,12 +177,24 @@ export default {
       const mapped = []
       data.accountsConnection.edges.forEach((d) => {
         d.node.balances.forEach((bal) => {
-          mapped.push({
-            asset: bal.asset,
-            available: bal.free,
-            reserved: bal.reserved,
-            total: bal.total
-          })
+          if (filterStore.useFilter) {
+            if (filterStore.token && filterStore.token === bal.asset) {
+              mapped.push({
+                asset: bal.asset,
+                available: bal.free,
+                reserved: bal.reserved,
+                total: bal.total
+              })
+            }
+          }
+          else {
+            mapped.push({
+              asset: bal.asset,
+              available: bal.free,
+              reserved: bal.reserved,
+              total: bal.total
+            })
+          }
         })
       })
       balanceStore.data.splice(0, balanceStore.data.length, ...mapped)

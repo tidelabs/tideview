@@ -11,7 +11,7 @@ const routes = [
       { name: 'transfers', path: 'transfers', component: () => import('pages/Transfers.vue') },
       { name: 'bonds', path: 'bonds', component: () => import('pages/Bonds.vue') },
       { name: 'rewards', path: 'rewards', component: () => import('pages/Rewards.vue') },
-      { name: 'slashes', path: 'slashes', component: () => import('pages/Slashes.vue') },
+      // { name: 'slashes', path: 'slashes', component: () => import('pages/Slashes.vue') },
       { name: 'history', path: 'history/:address?', component: () => import('pages/History.vue') },
       { name: 'active-bonds', path: 'active-bonds', component: () => import('pages/ActiveBonds.vue') }
     ]

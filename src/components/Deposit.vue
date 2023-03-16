@@ -48,6 +48,7 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { useDepositStore } from 'src/stores/deposit'
+import { useFilterStore } from 'src/stores/filter'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import usePagination from 'src/utils/usePagination'
 
@@ -79,10 +80,9 @@ export default {
   },
 
   setup (props) {
+    const filterStore = useFilterStore()
     const depositStore = useDepositStore()
     const selectedAddress = ref(props.account || null)
-
-    // depositStore.data.splice(0, depositStore.data.length)
 
     const columns = [
       {
@@ -141,8 +141,8 @@ export default {
 
     const query = computed(() => {
       return `
-        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-          depositsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String) {
+          depositsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}, asset_eq: $asset_eq}) {
             totalCount
             edges {
               node {
@@ -166,7 +166,16 @@ export default {
     })
 
     const variables = computed(() => {
-      return paginationVariables.value
+      const vars = {
+        ...paginationVariables.value
+      }
+      if (filterStore.useFilter) {
+        if (filterStore.token) {
+          vars.asset_eq = filterStore.token
+        }
+      }
+
+      return vars
     })
 
     const result = useQuery({
