@@ -28,11 +28,11 @@
           </q-td>
 
           <q-td key="fromId" :props="props" >
-            <Account :accountId="props.row.fromId" :selectedAccount="account" />
+            <AccountId :accountId="props.row.fromId" :selectedAccount="account" />
           </q-td>
 
           <q-td key="toId" :props="props" >
-            <Account :accountId="props.row.toId" :selectedAccount="account" />
+            <AccountId :accountId="props.row.toId" :selectedAccount="account" />
           </q-td>
 
           <q-td key="amount" :props="props">
@@ -65,7 +65,7 @@ import useVariables from 'src/utils/useVariables'
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
 import DateTimeInternational from './DateTimeInternational.vue'
-import Account from './Account.vue'
+import AccountId from './AccountId.vue'
 import TokenDisplay from './TokenDisplay.vue'
 
 export default {
@@ -75,7 +75,7 @@ export default {
     Pagination,
     BlockNumber,
     DateTimeInternational,
-    Account,
+    AccountId,
     TokenDisplay
   },
 
