@@ -50,6 +50,7 @@ import { useQuery } from '@urql/vue'
 import { useWithdrawalStore } from 'src/stores/withdrawal'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import usePagination from 'src/utils/usePagination'
+import useVariables from 'src/utils/useVariables'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -81,8 +82,6 @@ export default {
   setup (props) {
     const withdrawalStore = useWithdrawalStore()
     const selectedAddress = ref(props.account || null)
-
-    // withdrawalStore.data.splice(0, withdrawalStore.data.length)
 
     const columns = [
       {
@@ -139,10 +138,14 @@ export default {
       selectedAddress
     })
 
+    const {
+      variables
+    } = useVariables({ paginationVariables })
+
     const query = computed(() => {
       return `
-        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-          withdrawalsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
+          withdrawalsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}, asset_eq: $asset_eq, timestamp_gte: $timestamp_gte, timestamp_lte: $timestamp_lte}) {
             totalCount
             edges {
               node {
@@ -162,10 +165,6 @@ export default {
           }
         }
       `
-    })
-
-    const variables = computed(() => {
-      return paginationVariables.value
     })
 
     const result = useQuery({

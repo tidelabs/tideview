@@ -67,6 +67,7 @@ import { useSwapStore } from 'src/stores/swap'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 import usePagination from 'src/utils/usePagination'
+import useVariables from 'src/utils/useVariables'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -100,8 +101,6 @@ export default {
   setup (props) {
     const swapStore = useSwapStore()
     const selectedAddress = ref(props.account || null)
-
-    // swapStore.data.splice(0, swapStore.data.length)
 
     const columns = [
       {
@@ -190,10 +189,14 @@ export default {
       selectedAddress
     })
 
+    const {
+      variables
+    } = useVariables({ paginationVariables })
+
     const query = computed(() => {
       return `
-        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-          swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {type_not_eq: "Limit", isMarketMaker_not_eq: true, account: {id_eq: $id_eq}}) {
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $assetTo_eq: String, $assetFrom_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
+          swapsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {isMarketMaker_not_eq: true, type_not_eq: "Limit", account: {id_eq: $id_eq}, timestamp_gte: $timestamp_gte, timestamp_lte: $timestamp_lte, AND: {assetFrom_eq: $assetFrom_eq, OR: {assetTo_eq: $assetTo_eq}}}) {
             totalCount
             edges {
               node {
@@ -219,10 +222,6 @@ export default {
           }
         }
       `
-    })
-
-    const variables = computed(() => {
-      return paginationVariables.value
     })
 
     const result = useQuery({
@@ -252,6 +251,7 @@ export default {
           status: d.node.status,
           type: d.node.type,
           blockNumber: d.node.blockNumber,
+          // isMarketMaker: d.node.isMarketMaker,
           // extrinsicHash: d.node.extrinsicHash,
           // proposalHash: d.node.proposalHash,
           timestamp: d.node.timestamp,
@@ -261,7 +261,6 @@ export default {
         }
       })
       swapStore.data.splice(0, swapStore.data.length, ...mapped)
-      // console.log(swapStore.data)
     })
 
     watch(() => props.account, (val) => {

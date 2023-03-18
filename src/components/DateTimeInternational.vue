@@ -1,5 +1,5 @@
 <template>
-  <div>{{  formatDateTimeInternational(timestamp) }}</div>
+<div>{{  formatDateTimeInternational(timestamp) }}<q-tooltip>{{ timestamp }} UTC</q-tooltip></div>
 </template>
 
 <script>

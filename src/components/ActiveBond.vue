@@ -168,7 +168,9 @@ export default {
     })
 
     const variables = computed(() => {
-      return paginationVariables.value
+      return {
+        ...paginationVariables.value
+      }
     })
 
     const result = useQuery({
