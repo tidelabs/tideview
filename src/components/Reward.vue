@@ -55,6 +55,7 @@ import { useRewardStore } from 'src/stores/reward'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import { matCheckCircle, matCancel } from 'src/utils/icons'
 import usePagination from 'src/utils/usePagination'
+import useVariables from 'src/utils/useVariables'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -86,8 +87,6 @@ export default {
   setup (props) {
     const rewardStore = useRewardStore()
     const selectedAddress = ref(props.account || null)
-
-    // rewardStore.data.splice(0, rewardStore.data.length)
 
     const columns = [
       {
@@ -152,10 +151,14 @@ export default {
       selectedAddress
     })
 
+    const {
+      variables
+    } = useVariables({ paginationVariables })
+
     const query = computed(() => {
       return `
-        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
-          rewardsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}}) {
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
+          rewardsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}, timestamp_gte: $timestamp_gte, timestamp_lte: $timestamp_lte}) {
             totalCount
             edges {
               node {
@@ -174,12 +177,6 @@ export default {
           }
         }
       `
-    })
-
-    const variables = computed(() => {
-      return {
-        ...paginationVariables.value
-      }
     })
 
     const result = useQuery({

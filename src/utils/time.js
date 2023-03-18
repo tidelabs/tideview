@@ -47,7 +47,7 @@ export function formatDateTimeInternational (when) {
   if (!date) return ''
   if (typeof date === 'string') date = parseISO(date)
 
-  return format(date, 'dd LLL yyyy, hh:mm:ss XX')
+  return format(date, 'dd LLL yyyy, HH:mm:ss XX')
 }
 
 /**
@@ -189,4 +189,8 @@ export function toTimeFloat (
   timeValue = timeValue || 0
 
   return [ timeValue, unitString ]
+}
+
+export function quasarDateTimeToISOFormat (datetime) {
+  return datetime.replace(' ', 'T') + ':00.000000Z'
 }

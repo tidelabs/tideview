@@ -48,9 +48,9 @@
 import { ref, watch, computed } from 'vue'
 import { useQuery } from '@urql/vue'
 import { useWithdrawalStore } from 'src/stores/withdrawal'
-import { useFilterStore } from 'src/stores/filter'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import usePagination from 'src/utils/usePagination'
+import useVariables from 'src/utils/useVariables'
 
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
@@ -80,7 +80,6 @@ export default {
   },
 
   setup (props) {
-    const filterStore = useFilterStore()
     const withdrawalStore = useWithdrawalStore()
     const selectedAddress = ref(props.account || null)
 
@@ -139,10 +138,14 @@ export default {
       selectedAddress
     })
 
+    const {
+      variables
+    } = useVariables({ paginationVariables })
+
     const query = computed(() => {
       return `
-        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String) {
-          withdrawalsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}, asset_eq: $asset_eq}) {
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
+          withdrawalsConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {account: {id_eq: $id_eq}, asset_eq: $asset_eq, timestamp_gte: $timestamp_gte, timestamp_lte: $timestamp_lte}) {
             totalCount
             edges {
               node {
@@ -162,19 +165,6 @@ export default {
           }
         }
       `
-    })
-
-    const variables = computed(() => {
-      const vars = {
-        ...paginationVariables.value
-      }
-      if (filterStore.useFilter) {
-        if (filterStore.token) {
-          vars.asset_eq = filterStore.token
-        }
-      }
-
-      return vars
     })
 
     const result = useQuery({
