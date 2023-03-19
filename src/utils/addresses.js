@@ -1,6 +1,6 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
-
+import { useAliasStore } from 'src/stores/alias'
 /**
  *
  * @param {String} hash
@@ -25,4 +25,14 @@ export const isValidAddress = (address) => {
   catch (error) {
     return false
   }
+}
+
+export function getAccountAlias (accountId, truncate = true) {
+  const aliasStore = useAliasStore()
+
+  const account = aliasStore.getAlias(accountId)
+  if (account) {
+    return account.name
+  }
+  return truncate ? trimHash(accountId, 16) : accountId
 }

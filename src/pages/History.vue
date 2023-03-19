@@ -17,8 +17,8 @@
       <div v-if="selectedAddress" class="row items-center" >
         <identicon :address="selectedAddress" />
         <a :href="bondingEntityUrl + selectedAddress" target="_blank" class="external-link">
-          <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ trimHash(selectedAddress, 16) }}<q-tooltip>{{ selectedAddress }}</q-tooltip></span>
-          <span v-else class="q-ml-sm">{{ selectedAddress }}<q-tooltip>Click to view on the Bonding Dashboard</q-tooltip></span>
+          <span v-if="$q.screen.lt.md" class="q-ml-sm">{{ getAccountAlias(selectedAddress) }}<q-tooltip>{{ selectedAddress }}</q-tooltip></span>
+          <span v-else class="q-ml-sm">{{ getAccountAlias(selectedAddress, false) }}<q-tooltip>Click to view on the Bonding Dashboard</q-tooltip></span>
         </a>
       </div>
 
@@ -37,7 +37,7 @@
 <script>
 import { ref, watch, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { isValidAddress, trimHash } from 'src/utils/addresses'
+import { isValidAddress, getAccountAlias } from 'src/utils/addresses'
 import { bondingEntityUrl } from 'src/utils/constants'
 
 import Identicon from 'src/components/Identicon.vue'
@@ -99,7 +99,7 @@ export default {
     return {
       selectedAddress,
       isValidAddress,
-      trimHash,
+      getAccountAlias,
       bondingEntityUrl
     }
   }

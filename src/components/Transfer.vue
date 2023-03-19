@@ -28,11 +28,11 @@
           </q-td>
 
           <q-td key="fromId" :props="props" >
-            <Account :accountId="props.row.fromId" :selectedAccount="account" />
+            <AccountId :accountId="props.row.fromId" :selectedAccount="account" />
           </q-td>
 
           <q-td key="toId" :props="props" >
-            <Account :accountId="props.row.toId" :selectedAccount="account" />
+            <AccountId :accountId="props.row.toId" :selectedAccount="account" />
           </q-td>
 
           <q-td key="amount" :props="props">
@@ -65,7 +65,7 @@ import useVariables from 'src/utils/useVariables'
 import Pagination from 'src/components/Pagination.vue'
 import BlockNumber from './BlockNumber.vue'
 import DateTimeInternational from './DateTimeInternational.vue'
-import Account from './Account.vue'
+import AccountId from './AccountId.vue'
 import TokenDisplay from './TokenDisplay.vue'
 
 export default {
@@ -75,7 +75,7 @@ export default {
     Pagination,
     BlockNumber,
     DateTimeInternational,
-    Account,
+    AccountId,
     TokenDisplay
   },
 
@@ -92,8 +92,6 @@ export default {
   setup (props) {
     const transferStore = useTransferStore()
     const selectedAddress = ref(props.account || null)
-
-    // transferStore.data.splice(0, transferStore.data.length)
 
     const columns = [
       {
@@ -161,40 +159,47 @@ export default {
       maxPages,
       onRequest
     } = usePagination({
-      account: props.account,
       useAccount: props.useAccount,
       selectedAddress
     })
 
     const {
       variables
-    } = useVariables({ paginationVariables })
+    } = useVariables({
+      paginationVariables,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    watch(variables, (val) => {
+      console.log('variables (Transfers):', JSON.stringify(val, null, 2))
+    })
 
     const query = computed(() => {
       return `
-        query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
-          transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {asset_eq: $asset_eq, timestamp_gte: $timestamp_gte, timestamp_lte: $timestamp_lte, AND: { from: {id_eq: $id_eq}, OR: {to: {id_eq: $id_eq}}}}) {
-            totalCount
-            edges {
-              node {
-                from {
+          query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
+            transfersConnection(orderBy: blockNumber_DESC, first: $first, after: $after, where: {asset_eq: $asset_eq, timestamp_gte: $timestamp_gte, timestamp_lte: $timestamp_lte, AND: { from: {id_eq: $id_eq}, OR: {to: {id_eq: $id_eq}}}}) {
+              totalCount
+              edges {
+                node {
+                  from {
+                    id
+                  }
+                  to {
+                    id
+                  }
+                  amount
+                  asset
+                  blockNumber
+                  extrinsicHash
                   id
+                  success
+                  timestamp
+                  type
                 }
-                to {
-                  id
-                }
-                amount
-                asset
-                blockNumber
-                extrinsicHash
-                id
-                success
-                timestamp
-                type
               }
             }
           }
-        }
       `
     })
 
@@ -229,6 +234,10 @@ export default {
         }
       })
       transferStore.data.splice(0, transferStore.data.length, ...mapped)
+    })
+
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
     })
 
     return {

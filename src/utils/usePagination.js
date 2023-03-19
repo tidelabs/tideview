@@ -2,7 +2,6 @@ import { ref, computed, watch } from 'vue'
 import { extend } from 'quasar'
 
 export default function ({
-  account,
   useAccount,
   selectedAddress
 }) {
