@@ -47,6 +47,7 @@ import { useBalanceStore } from 'src/stores/balance'
 import { useFilterStore } from 'src/stores/filter'
 import { rowsPerPageOptions } from 'src/utils/constants'
 import usePagination from 'src/utils/usePagination'
+import useVariables from 'src/utils/useVariables'
 
 import Pagination from 'src/components/Pagination.vue'
 import TokenDisplay from './TokenDisplay.vue'
@@ -118,7 +119,14 @@ export default {
       maxPages,
       onRequest
     } = usePagination({
-      account: props.account,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const {
+      variables
+    } = useVariables({
+      paginationVariables,
       useAccount: props.useAccount,
       selectedAddress
     })
@@ -145,19 +153,6 @@ export default {
       `
     })
 
-    const variables = computed(() => {
-      const vars = {
-        ...paginationVariables.value
-      }
-      // if (filterStore.useFilter) {
-      //   if (filterStore.token) {
-      //     vars.asset_eq = filterStore.token
-      //   }
-      // }
-
-      return vars
-    })
-
     const result = useQuery({
       query,
       variables,
@@ -165,7 +160,7 @@ export default {
     })
 
     watch(result.data, (data) => {
-      console.log(result.data)
+      // console.log(result.data)
       if (!data) {
         balanceStore.data.splice(0, balanceStore.data.length)
         return

@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useFilterStore } from 'src/stores/filter'
 import { quasarDateTimeToISOFormat } from 'src/utils/time'
 
-export default function ({ paginationVariables }) {
+export default function ({ paginationVariables, useAccount, selectedAddress }) {
   const filterStore = useFilterStore()
 
   const variables = computed(() => {
@@ -21,6 +21,9 @@ export default function ({ paginationVariables }) {
       }
       if (filterStore.dateEnd) {
         vars.timestamp_gte = quasarDateTimeToISOFormat(filterStore.dateEnd)
+      }
+      if (useAccount && selectedAddress.value) {
+        vars.id_eq = selectedAddress.value
       }
     }
 

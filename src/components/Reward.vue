@@ -40,7 +40,7 @@
           </q-td>
 
           <q-td key="validatorId" :props="props" >
-            <Account :accountId="props.row.validatorId" />
+            <AccountId :accountId="props.row.validatorId" />
           </q-td>
         </q-tr>
       </template>
@@ -146,14 +146,17 @@ export default {
       maxPages,
       onRequest
     } = usePagination({
-      account: props.account,
       useAccount: props.useAccount,
       selectedAddress
     })
 
     const {
       variables
-    } = useVariables({ paginationVariables })
+    } = useVariables({
+      paginationVariables,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
 
     const query = computed(() => {
       return `

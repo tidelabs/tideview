@@ -133,14 +133,21 @@ export default {
       maxPages,
       onRequest
     } = usePagination({
-      account: props.account,
       useAccount: props.useAccount,
       selectedAddress
     })
 
     const {
       variables
-    } = useVariables({ paginationVariables })
+    } = useVariables({
+      paginationVariables,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    watch(variables, (val) => {
+      console.log('variables (Withdrawals):', JSON.stringify(val, null, 2))
+    })
 
     const query = computed(() => {
       return `

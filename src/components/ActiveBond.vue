@@ -142,7 +142,6 @@ export default {
       maxPages,
       onRequest
     } = usePagination({
-      account: props.account,
       useAccount: props.useAccount,
       selectedAddress
     })
