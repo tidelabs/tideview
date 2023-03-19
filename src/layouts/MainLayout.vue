@@ -134,6 +134,11 @@ const internalLinks = [
     link: 'active-bonds'
   },
   {
+    title: 'Accounts',
+    link: 'accounts'
+  },
+
+  {
     title: 'History',
     link: 'history'
   }

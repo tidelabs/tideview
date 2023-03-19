@@ -30,6 +30,7 @@
       <Deposit :account="selectedAddress" use-account />
       <Bond :account="selectedAddress" use-account />
       <ActiveBond :account="selectedAddress" use-account />
+      <Account :account="selectedAddress" use-account />
     </div>
 </q-page>
 </template>
@@ -49,6 +50,7 @@ import Deposit from 'src/components/Deposit.vue'
 import Bond from 'src/components/Bond.vue'
 import ActiveBond from 'src/components/ActiveBond.vue'
 import Balance from 'src/components/Balance.vue'
+import Account from 'src/components/Account.vue'
 
 export default {
   name: 'History',
@@ -62,7 +64,8 @@ export default {
     Deposit,
     Bond,
     ActiveBond,
-    Balance
+    Balance,
+    Account
   },
 
   setup () {

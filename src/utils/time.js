@@ -1,10 +1,23 @@
-import { format, subDays, parseISO } from 'date-fns'
+import { format, formatISO, subDays, subMilliseconds, parseISO } from 'date-fns'
+
+const EXPECTED_BLOCK_TIME = 6000 // 6 seconds
 
 export function eraToDate (era, currentEra) {
   if (era <= currentEra) {
     return format(subDays(new Date(), currentEra - era), 'MMM.dd')
   }
   return 'unknown'
+}
+
+export function blocksToMS (block) {
+  const blockTime = parseInt(EXPECTED_BLOCK_TIME, 10) // 6000
+  return (parseInt(block, 10) * blockTime)
+}
+
+export function blockToDate (block) {
+  const currentBlock = 0 // TODO:
+  const ms = blocksToMS(currentBlock - block)
+  return formatISO(subMilliseconds(new Date(), ms), 'MMM.dd')
 }
 
 export function displayMilliOrSecond (num) {

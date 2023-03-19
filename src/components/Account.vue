@@ -1,0 +1,211 @@
+<template>
+  <div>
+    <q-table
+      id="account-data"
+      title="Accounts"
+      :loading="loading"
+      :columns="columns"
+      :rows="data"
+      :rows-per-page-options="rowsPerPageOptions"
+      v-model:pagination="pagination"
+      row-key="id"
+      @request="onRequest"
+    >
+      <template v-slot:pagination>
+        <Pagination
+          v-model="currentPage"
+          :max="maxPages"
+        />
+      </template>
+      <template v-slot:body="props">
+        <q-tr>
+          <q-td key="blockNumber" :props="props">
+            <BlockNumber :blockNumber="props.row.blockNumber" />
+          </q-td>
+
+          <!-- <q-td key="timestamp" :props="props">
+            <DateTimeInternational :timestamp="props.row.timestamp" />
+          </q-td> -->
+
+          <q-td key="accountId" :props="props" >
+            <AccountId :accountId="props.row.accountId" :selectedAccount="account" />
+          </q-td>
+
+          <!-- <q-td key="amount" :props="props">
+            <TokenDisplay symbol="TDFY" :amount="props.row.amount" />
+          </q-td>
+
+          <q-td key="type" :props="props">
+            {{  props.row.type }}
+          </q-td> -->
+        </q-tr>
+      </template>
+    </q-table>
+  </div>
+</template>
+
+<script>
+import { ref, watch, computed } from 'vue'
+import { useQuery } from '@urql/vue'
+import { useAccountStore } from 'src/stores/account'
+import { rowsPerPageOptions } from 'src/utils/constants'
+import { matCheckCircle, matCancel } from 'src/utils/icons'
+// import { blockToDate } from 'src/utils/time'
+import usePagination from 'src/utils/usePagination'
+import useVariables from 'src/utils/useVariables'
+
+import Pagination from 'src/components/Pagination.vue'
+import BlockNumber from './BlockNumber.vue'
+// import DateTimeInternational from './DateTimeInternational.vue'
+import AccountId from './AccountId.vue'
+// import TokenDisplay from './TokenDisplay.vue'
+
+export default {
+  name: 'Bonds',
+
+  components: {
+    Pagination,
+    BlockNumber,
+    // DateTimeInternational,
+    AccountId
+    // TokenDisplay
+  },
+
+  props: {
+    account: {
+      type: String,
+      default: null
+    },
+    useAccount: {
+      type: Boolean
+    }
+  },
+
+  setup (props) {
+    const accountStore = useAccountStore()
+    const selectedAddress = ref(props.account || null)
+
+    const columns = [
+      {
+        label: 'Block',
+        name: 'blockNumber',
+        field: 'blockNumber',
+        required: true,
+        align: 'left',
+        sortable: false
+      },
+      // {
+      //   label: 'Time',
+      //   name: 'timestamp',
+      //   field: 'timestamp',
+      //   required: true,
+      //   align: 'left',
+      //   sortable: false
+      // },
+      {
+        label: 'Account',
+        name: 'accountId',
+        field: 'accountId',
+        required: true,
+        align: 'left',
+        sortable: false
+      }
+      // {
+      //   label: 'Amount',
+      //   name: 'amount',
+      //   field: 'amount',
+      //   required: true,
+      //   align: 'right',
+      //   sortable: false
+      // },
+      // {
+      //   label: 'Type',
+      //   name: 'type',
+      //   field: 'type',
+      //   required: true,
+      //   align: 'left',
+      //   sortable: false
+      // }
+    ]
+
+    const {
+      pagination,
+      currentPage,
+      paginationVariables,
+      maxPages,
+      onRequest
+    } = usePagination({
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const {
+      variables
+    } = useVariables({
+      paginationVariables,
+      useAccount: props.useAccount,
+      selectedAddress
+    })
+
+    const query = computed(() => {
+      return `
+        query MyQuery($first: Int! = 10, $after: String, $id_eq: String) {
+          accountsConnection(orderBy: syncedAt_DESC, first: $first, after: $after, where: {id_eq: $id_eq}) {
+            totalCount
+            edges {
+              node {
+                id
+                syncedAt
+              }
+            }
+          }
+        }
+      `
+    })
+
+    const result = useQuery({
+      query,
+      variables,
+      requestPolicy: 'network-only'
+    })
+
+    watch(result.data, (data) => {
+      if (!data) {
+        // clear previous data, if any
+        accountStore.data.splice(0, accountStore.data.length)
+        return
+      }
+
+      // total rows available
+      pagination.value.rowsNumber = data.accountsConnection.totalCount
+
+      const mapped = data.accountsConnection.edges.map((d) => {
+        return {
+          accountId: d.node.id,
+          blockNumber: d.node.syncedAt
+          // timestamp: blockToDate(d.node.syncedAt)
+        }
+      })
+      accountStore.data.splice(0, accountStore.data.length, ...mapped)
+    })
+
+    watch(() => props.account, (val) => {
+      selectedAddress.value = val
+    })
+
+    return {
+      loading: result.fetching,
+      error: result.error,
+      columns,
+      data: accountStore.data,
+      pagination,
+      onRequest,
+      maxPages,
+      currentPage,
+      rowsPerPageOptions,
+      matCheckCircle,
+      matCancel
+    }
+  }
+}
+</script>
