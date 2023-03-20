@@ -43,14 +43,14 @@
               outlined
               v-model="aliasAddress"
               label="Address"
-              color="purple-13"
+              :color="$q.dark.isActive ? 'yellow-13' : 'primary'"
               :rules="[val => isValidAddress(val)  || 'Invalid address', val => isAddressAvailable(val) || 'Address already used']"
             />
             <q-input
               outlined
               v-model="aliasName"
               label="Name"
-              color="purple-13"
+              :color="$q.dark.isActive ? 'yellow-13' : 'primary'"
             />
           </div>
         </q-card-section>
@@ -75,7 +75,7 @@
         label="Filter by alias"
         outlined
         clearable
-        color="purple-13"
+        :color="$q.dark.isActive ? 'yellow-13' : 'primary'"
         style="min-width: 100%; max-height: 56px;"
         class="ellipsis"
       />
