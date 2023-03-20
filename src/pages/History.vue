@@ -6,7 +6,7 @@
         label="Input an Address"
         outlined
         clearable
-        :color="$q.dark.isActive ? 'yellow' : 'primary'"
+        :color="$q.dark.isActive ? 'yellow-13' : 'primary'"
         :rules="[val => isValidAddress(val) || 'Invalid address']"
         style="min-width: 300px;"
         class="ellipsis"
