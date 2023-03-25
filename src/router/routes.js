@@ -4,7 +4,8 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { name: 'home', path: '', component: () => import('pages/IndexPage.vue') },
+      // { name: 'home', path: '', component: () => import('pages/IndexPage.vue') },
+      { name: 'home', path: '', redirect: { name: 'swaps' } },
       { name: 'swaps', path: 'swaps', component: () => import('pages/Swaps.vue') },
       { name: 'withdrawals', path: 'withdrawals', component: () => import('pages/Withdrawals.vue') },
       { name: 'deposits', path: 'deposits', component: () => import('pages/Deposits.vue') },
