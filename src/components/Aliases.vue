@@ -144,6 +144,7 @@ import { exportFile, useQuasar } from 'quasar'
 import { useAliasStore } from 'src/stores/alias'
 import { isValidAddress } from 'src/utils/addresses'
 import Identicon from './Identicon.vue'
+import { merge } from 'src/utils/merge'
 
 export default {
   name: 'Aliases',
@@ -245,7 +246,9 @@ export default {
         const file = await fileHandle.getFile()
         const contents = JSON.parse(await file.text())
         // console.log('filePicker:', file, contents)
-        aliasStore.aliases.push(...contents)
+        const { uniques, conflicts } = merge(aliasStore.aliases, contents)
+        console.log('uniques:', JSON.stringify(uniques, null, 2), 'conflicts:', JSON.stringify(conflicts, null, 2))
+        aliasStore.aliases.push(...uniques)
         aliasStore.saveAliases()
         $q.notify({
           message: 'Aliases imported!!',
