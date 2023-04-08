@@ -246,8 +246,7 @@ export default {
         const file = await fileHandle.getFile()
         const contents = JSON.parse(await file.text())
         // console.log('filePicker:', file, contents)
-        const { uniques, conflicts } = merge(aliasStore.aliases, contents)
-        console.log('uniques:', JSON.stringify(uniques, null, 2), 'conflicts:', JSON.stringify(conflicts, null, 2))
+        const { uniques } = merge(aliasStore.aliases, contents)
         aliasStore.aliases.push(...uniques)
         aliasStore.saveAliases()
         $q.notify({
