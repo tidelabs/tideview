@@ -14,7 +14,7 @@
   "dependencies": {
     "@polkadot/api": "^10.3.2",
     "@quasar/extras": "^1.16.2",
-    "@urql/vue": "^1.0.5",
+    "@urql/vue": "^1.1.0",
     "bignumber.js": "^9.1.1",
     "core-js": "^3.30.0",
     "date-fns": "^2.29.3",
@@ -25,6 +25,9 @@
     "vue": "^3.2.47",
     "vue-router": "^4.1.6"
   },
+  "resolutions": {
+    "@urql/core": "3.2.2"
+  },
   "devDependencies": {
     "@babel/eslint-parser": "^7.21.3",
     "@quasar/app-webpack": "^3.7.2",
@@ -34,7 +37,7 @@
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-vue": "^9.10.0",
-    "eslint-webpack-plugin": "^4.0.0"
+    "eslint-webpack-plugin": "^4.0.1"
   },
   "browserslist": [
     "last 10 Chrome versions",

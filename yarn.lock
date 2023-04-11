@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"@0no-co/graphql.web@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@0no-co/graphql.web/-/graphql.web-1.0.0.tgz#af3f5e3b9359d2f011bc37a93654348b92d4d893"
-  integrity sha512-JBq2pWyDchE1vVjj/+c4dzZ8stbpew4RrzpZ3vYdn1WJFGHfYg6YIX1fDdMKtSXJJM9FUlsoDOxemr9WMM2p+A==
-
 "@ampproject/remapping@^2.2.0":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@ampproject/remapping/-/remapping-2.2.1.tgz#99e8e11851128b8702cd57c33684f1d0f260b630"
@@ -1879,15 +1874,14 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@urql/core@^4.0.0":
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/@urql/core/-/core-4.0.4.tgz#033fbaae7a98fd5a27bd706e74872e7f8af34887"
-  integrity sha512-r1rB/VMVpCnfnMTTzCAs+HY+UqOHUgpZ+GimLtU4DCTP3C78DK+m4qr36M7KKleggrKgcpcC1TE8eFEVcKzfSQ==
+"@urql/core@3.2.2", "@urql/core@^4.0.0":
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/@urql/core/-/core-3.2.2.tgz#2a44015b536d72981822f715c96393d8e0ddc576"
+  integrity sha512-i046Cz8cZ4xIzGMTyHZrbdgzcFMcKD7+yhCAH5FwWBRjcKrc+RjEOuR9X5AMuBvr8c6IAaE92xAqa4wmlGfWTQ==
   dependencies:
-    "@0no-co/graphql.web" "^1.0.0"
-    wonka "^6.3.0"
+    wonka "^6.1.2"
 
-"@urql/vue@^1.0.5":
+"@urql/vue@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@urql/vue/-/vue-1.1.0.tgz#32c3f4e1ef6900378352421e45e6f68a102648a5"
   integrity sha512-fqkhCdv1RLNma2BcfLFOogKt416TNZejW+wl8uz5nU5KRTf82PS/5m5UaWumjtqF6k7BfxR8vecLdQj9HokYVQ==
@@ -3212,9 +3206,9 @@ ejs@^3.1.7:
     jake "^10.8.5"
 
 electron-to-chromium@^1.4.284:
-  version "1.4.357"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.357.tgz#ad02bab69e696e9a122788da4460c86166a98a01"
-  integrity sha512-UTkCbNTAcGXABmEnQrGcW4m3cG6fcyBfD4KDF0iyEAlbrGZiY9dmslyDAGOD1Kr5biN2F743Y30aRCOtau35Vw==
+  version "1.4.358"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.358.tgz#301afde62c1bbe36aeec3155b11f7db1c5b01c78"
+  integrity sha512-dbqpWy662dGVwq27q8i6+t5FPcQiFPs/VExXJ+/T9Xp9KUV0b5bvG+B/i07FNNr7PgcN3GhZQCZoYJ9EUfnIOg==
 
 elementtree@0.1.7:
   version "0.1.7"
@@ -3489,7 +3483,7 @@ eslint-visitor-keys@^3.3.0, eslint-visitor-keys@^3.4.0:
   resolved "https://registry.yarnpkg.com/eslint-visitor-keys/-/eslint-visitor-keys-3.4.0.tgz#c7f0f956124ce677047ddbc192a68f999454dedc"
   integrity sha512-HPpKPUBQcAsZOsHAFwTtIKcYlCje62XB7SEAcxjtmW6TD1WVpkS6i6/hOVtTZIl4zGj/mBqpFVGvaDneik+VoQ==
 
-eslint-webpack-plugin@^4.0.0:
+eslint-webpack-plugin@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/eslint-webpack-plugin/-/eslint-webpack-plugin-4.0.1.tgz#f0f0e9afff2801d8bd41eac88e5409821ecbaccb"
   integrity sha512-fUFcXpui/FftGx3NzvWgLZXlLbu+m74sUxGEgxgoxYcUtkIQbS6SdNNZkS99m5ycb23TfoNYrDpp1k/CK5j6Hw==
@@ -6904,7 +6898,7 @@ wildcard@^2.0.0:
   resolved "https://registry.yarnpkg.com/wildcard/-/wildcard-2.0.0.tgz#a77d20e5200c6faaac979e4b3aadc7b3dd7f8fec"
   integrity sha512-JcKqAHLPxcdb9KM49dufGXn2x3ssnfjbcaQdLlfZsL9rH9wgDQjUtDxbo8NE0F6SFvydeu1VhZe7hZuHsB2/pw==
 
-wonka@^6.3.0:
+wonka@^6.1.2, wonka@^6.3.0:
   version "6.3.1"
   resolved "https://registry.yarnpkg.com/wonka/-/wonka-6.3.1.tgz#315b2a91e134c4032980836e6d97e13d0927634d"
   integrity sha512-nJyGPcjuBiaLFn8QAlrHd+QjV9AlPO7snOWAhgx6aX0nQLMV6Wi0nqfrkmsXIH0efngbDOroOz2QyLnZMF16Hw==
