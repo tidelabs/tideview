@@ -171,10 +171,6 @@ export default {
       selectedAddress
     })
 
-    watch(variables, (val) => {
-      console.log('variables (Transfers):', JSON.stringify(val, null, 2))
-    })
-
     const query = computed(() => {
       return `
           query MyQuery($first: Int! = 10, $after: String, $id_eq: String, $asset_eq: String, $timestamp_gte: DateTime, $timestamp_lte: DateTime) {
