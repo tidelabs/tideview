@@ -17,10 +17,10 @@ export default function ({ paginationVariables, useAccount, selectedAddress }) {
         vars.asset_eq = filterStore.token
       }
       if (filterStore.dateStart) {
-        vars.timestamp_lte = quasarDateTimeToISOFormat(filterStore.dateStart)
+        vars.timestamp_lte = quasarDateTimeToISOFormat(filterStore.dateEnd)
       }
       if (filterStore.dateEnd) {
-        vars.timestamp_gte = quasarDateTimeToISOFormat(filterStore.dateEnd)
+        vars.timestamp_gte = quasarDateTimeToISOFormat(filterStore.dateStart)
       }
       if (useAccount && selectedAddress.value) {
         vars.id_eq = selectedAddress.value
