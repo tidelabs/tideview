@@ -242,6 +242,9 @@ export default {
       }
 
       try {
+        // read aliases in case they have changed from a different browser instance
+        aliasStore.restoreAliases()
+        // get file from user
         const [fileHandle] = await window.showOpenFilePicker(pickerOpts)
         const file = await fileHandle.getFile()
         const contents = JSON.parse(await file.text())
