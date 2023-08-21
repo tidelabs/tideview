@@ -1,6 +1,6 @@
 {
   "name": "tideview",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "View data on the TIDEFI blockchain",
   "productName": "Tideview Dashboard",
   "author": "Jeff <jeff.galbraith@semantic-network.com>",
