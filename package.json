@@ -16,7 +16,7 @@
     "@quasar/extras": "^1.16.6",
     "@urql/vue": "^1.1.2",
     "bignumber.js": "^9.1.2",
-    "core-js": "^3.32.2",
+    "core-js": "^3.33.0",
     "date-fns": "^2.30.0",
     "graphql": "^16.8.1",
     "jdenticon": "^3.2.0",
